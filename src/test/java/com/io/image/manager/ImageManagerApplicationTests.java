@@ -1,4 +1,4 @@
-package com.io.image.manager.imagemanager;
+package com.io.image.manager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
