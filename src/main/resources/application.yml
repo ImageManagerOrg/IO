@@ -1,2 +1,24 @@
+spring:
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 image-manager:
   origin-server: http://3.125.156.169/
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+image-manager:
+  origin-server: http://3.125.156.169/
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+image-manager:
+  origin-server: http://ORIGIN/

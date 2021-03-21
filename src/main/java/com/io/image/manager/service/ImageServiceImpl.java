@@ -1,6 +1,6 @@
 package com.io.image.manager.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.io.image.manager.config.AppConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -11,14 +11,17 @@ import java.util.Optional;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-    @Value("${image-manager.origin-server}")
-    private String originServer;
+    private final AppConfigurationProperties props;
+
+    public ImageServiceImpl(AppConfigurationProperties props) {
+        this.props = props;
+    }
 
     @Override
     public Optional<BufferedImage> fetchRemoteImage(String filename) {
         try {
             // FIXME: this does not look pretty
-            URL url = new URL(originServer + filename);
+            URL url = new URL(props.getOriginServer() + filename);
             BufferedImage image = ImageIO.read(url.openStream());
             if (image == null) {
                 return Optional.empty();
