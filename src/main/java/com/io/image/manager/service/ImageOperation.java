@@ -7,7 +7,15 @@ public abstract class ImageOperation {
     private final String name;
     private final Map<String, String> arguments;
 
-    static class ImageOperationException extends Exception {}
+    public String getName() {
+        return name;
+    }
+
+    public Map<String, String> getArguments() {
+        return arguments;
+    }
+
+    static public class ImageOperationException extends Exception {}
 
     public ImageOperation(String name, Map<String, String> arguments) {
         this.name = name;
