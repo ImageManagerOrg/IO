@@ -1,10 +1,12 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -13,8 +15,11 @@ import java.util.Optional;
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
 
-    public ImageServiceImpl(AppConfigurationProperties props) {
+    private final ImageCache cache;
+
+    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache) {
         this.props = props;
+        this.cache = cache;
     }
 
     @Override
@@ -35,7 +40,16 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public Optional<BufferedImage> fetchLocalImage(String filename, List<ImageOperation> operations) {
-        return Optional.empty();
+        try {
+            return cache.loadImage(filename, operations);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void storeImage(BufferedImage image, String filename, List<ImageOperation> operations) throws IOException {
+        cache.storeImage(image, filename, operations);
     }
 
     @Override
