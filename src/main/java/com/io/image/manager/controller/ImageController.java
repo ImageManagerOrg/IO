@@ -13,7 +13,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class ImageController {
@@ -29,19 +28,9 @@ public class ImageController {
     public byte[] getImage(@PathVariable String filename) throws IOException, ImageOperation.ImageOperationException {
         List<ImageOperation> operations =  Collections.emptyList();
 
-        Optional<BufferedImage> image;
-        // TODO: do the query params parsing to image operations list
-        image = imageService.fetchLocalImage(filename, operations);
-
+        var image = imageService.fetchAndCacheImage(filename, operations);
         if (image.isPresent()) {
             return dumpImage(image.get());
-        }
-
-        image = imageService.fetchRemoteImage(filename);
-        if (image.isPresent()) {
-            BufferedImage img = imageService.applyOperations(image.get(), operations);
-            imageService.storeImage(img, filename, operations);
-            return dumpImage(img);
         }
 
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
