@@ -22,3 +22,25 @@ spring:
       on-profile: prod
 image-manager:
   origin-server: http://ORIGIN/
+---
+management:
+  metrics:
+    export.prometheus:
+        # enabling prometheus format metrics
+        enabled: true
+    distribution.percentiles.http.server.requests: 0.5, 0.95, 0.99
+    enable:
+      jvm: false
+#      tomcat: true
+  #      # expose metric for requests that meet 50ms response time SLA
+#      sla.http.server.requests: 50ms
+  endpoints:
+    web:
+      # by default Spring expose actuator endpoints on /actuator/ path but prometheus needs it be on /
+      base-path: /
+      exposure:
+        include: "*"
+      path-mapping:
+        # prometheus looks at /metrics by default when scraping for metrics
+        metrics: spring-metrics
+        prometheus: metrics
