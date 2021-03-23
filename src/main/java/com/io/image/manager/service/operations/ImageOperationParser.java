@@ -21,12 +21,7 @@ public class ImageOperationParser {
                     imageOperations.add(imageOperation);
                 }
 
-                if ("crop".equals(value)) {
-                    imageOperation = new CropOperation("crop", new HashMap<>());
-                }
-                else if ("scale".equals(value)) {
-                    imageOperation = new ScaleOperation("scale", new HashMap<>());
-                }
+                imageOperation = createImageOperation(value);
                 continue;
             }
 
@@ -35,5 +30,14 @@ public class ImageOperationParser {
         imageOperations.add(imageOperation);
 
         return imageOperations;
+    }
+
+    public static ImageOperation createImageOperation(String operationName) {
+
+        return switch (operationName) {
+            case "crop" -> new CropOperation("crop", new HashMap<>());
+            case "scale" -> new ScaleOperation("scale", new HashMap<>());
+            default -> null;
+        };
     }
 }
