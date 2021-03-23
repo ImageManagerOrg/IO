@@ -36,6 +36,10 @@ public class DiskImageCache implements ImageCache {
     @Override
     public void storeImage(BufferedImage image, String filename, List<ImageOperation> operations) throws IOException {
         Path path = Path.of(props.getDiskCacheMountPoint(), imageHash(filename, operations));
+        Path parentDir = path.getParent();
+        if (!Files.exists(parentDir)){
+            Files.createDirectories(parentDir);
+        }
         ImageIO.write(image, "jpg", Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
     }
 
