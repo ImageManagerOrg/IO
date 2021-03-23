@@ -1,6 +1,6 @@
 package com.io.image.manager.cache;
 
-import com.io.image.manager.service.ImageOperation;
+import com.io.image.manager.service.operations.ImageOperation;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

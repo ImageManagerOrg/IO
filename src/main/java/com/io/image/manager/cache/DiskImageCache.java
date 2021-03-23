@@ -1,7 +1,7 @@
 package com.io.image.manager.cache;
 
 import com.io.image.manager.config.AppConfigurationProperties;
-import com.io.image.manager.service.ImageOperation;
+import com.io.image.manager.service.operations.ImageOperation;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
