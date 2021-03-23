@@ -13,22 +13,24 @@ public class ImageOperationParser {
 
         for (String param : params) {
             String[] args = param.split("=");
+            String key = args[0];
+            String value = args[1];
 
-            if ("op".equals(args[0])) {
+            if ("op".equals(key)) {
                 if (imageOperation != null) {
                     imageOperations.add(imageOperation);
                 }
 
-                if ("crop".equals(args[1])) {
+                if ("crop".equals(value)) {
                     imageOperation = new CropOperation("crop", new HashMap<>());
                 }
-                else if ("scale".equals(args[1])) {
+                else if ("scale".equals(value)) {
                     imageOperation = new ScaleOperation("scale", new HashMap<>());
                 }
                 continue;
             }
 
-            Objects.requireNonNull(imageOperation).addArgument(args[0], args[1]);
+            Objects.requireNonNull(imageOperation).addArgument(key, value);
         }
         imageOperations.add(imageOperation);
 
