@@ -1,4 +1,4 @@
-package com.io.image.manager.service;
+package com.io.image.manager.service.operations;
 
 import java.awt.image.BufferedImage;
 import java.util.Map;
@@ -20,6 +20,10 @@ public abstract class ImageOperation {
     public ImageOperation(String name, Map<String, String> arguments) {
         this.name = name;
         this.arguments = arguments;
+    }
+
+    public void addArgument(String key, String value) {
+        arguments.put(key, value);
     }
 
     public abstract BufferedImage run(BufferedImage image) throws ImageOperationException;
