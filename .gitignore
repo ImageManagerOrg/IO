@@ -139,3 +139,6 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
+
+cache/*
+!cache/.gitkeep

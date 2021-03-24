@@ -1,10 +1,13 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.service.operations.ImageOperation;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -12,13 +15,34 @@ import java.util.Optional;
 @Service
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
+    private final ImageCache cache;
 
-    public ImageServiceImpl(AppConfigurationProperties props) {
+    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache) {
         this.props = props;
+        this.cache = cache;
     }
 
     @Override
-    public Optional<BufferedImage> fetchRemoteImage(String filename) {
+    public Optional<BufferedImage> fetchAndCacheImage(String filename, List<ImageOperation> operations) throws ImageOperation.ImageOperationException, IOException {
+        Optional<BufferedImage> image = fetchLocalImage(filename, operations);
+        if (image.isPresent()) {
+            return image;
+        }
+
+        image = fetchRemoteImage(filename) ;
+        if (image.isPresent()) {
+            var img = image.get();
+            for (var op: operations) {
+                img = op.run(img);
+            }
+            cache.storeImage(img, filename, operations);
+
+            return Optional.of(img);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<BufferedImage> fetchRemoteImage(String filename) {
         try {
             // FIXME: this does not look pretty
             URL url = new URL(props.getOriginServer() + filename);
@@ -33,16 +57,7 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    @Override
-    public Optional<BufferedImage> fetchLocalImage(String filename, List<ImageOperation> operations) {
-        return Optional.empty();
-    }
-
-    @Override
-    public BufferedImage applyOperations(BufferedImage image, List<ImageOperation> operations) throws ImageOperation.ImageOperationException {
-        for (var operation: operations) {
-            image = operation.run(image);
-        }
-        return image;
+    private Optional<BufferedImage> fetchLocalImage(String filename, List<ImageOperation> operations) throws IOException {
+            return cache.loadImage(filename, operations);
     }
 }
