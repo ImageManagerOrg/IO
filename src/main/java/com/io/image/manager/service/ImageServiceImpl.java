@@ -3,6 +3,9 @@ package com.io.image.manager.service;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.service.operations.ImageOperation;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -16,10 +19,12 @@ import java.util.Optional;
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
     private final ImageCache cache;
+    private final Counter missCounter;
 
-    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache) {
+    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr) {
         this.props = props;
         this.cache = cache;
+        missCounter = Counter.builder("cache.miss.count").register(mr);
     }
 
     @Override
@@ -29,10 +34,12 @@ public class ImageServiceImpl implements ImageService {
             return image;
         }
 
-        image = fetchRemoteImage(filename) ;
+        image = fetchRemoteImage(filename);
         if (image.isPresent()) {
+            missCounter.increment();
+
             var img = image.get();
-            for (var op: operations) {
+            for (var op : operations) {
                 img = op.run(img);
             }
             cache.storeImage(img, filename, operations);
@@ -58,6 +65,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private Optional<BufferedImage> fetchLocalImage(String filename, List<ImageOperation> operations) throws IOException {
-            return cache.loadImage(filename, operations);
+        return cache.loadImage(filename, operations);
     }
 }
