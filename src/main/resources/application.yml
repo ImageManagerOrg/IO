@@ -28,14 +28,13 @@ image-manager:
 management:
   metrics:
     export.prometheus.enabled: true
-    distribution.percentiles.http.server.requests: 0.5, 0.95, 0.99
-    web.server.request.autotime.enabled: true
+    distribution.percentiles.http.server.requests: 0.5, 0.90, 0.99
+    web.server.request.autotime.enabled: false
     enable:
       jvm: false
       tomcat: false
       system: false
       logback: false
-    # enable.all: true # useful as a list of available metrics
   endpoints:
     web:
       # by default Spring expose actuator endpoints on /actuator/ path but prometheus needs it be on /

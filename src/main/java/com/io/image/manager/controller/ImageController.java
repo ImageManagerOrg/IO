@@ -3,7 +3,12 @@ package com.io.image.manager.controller;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
 import com.io.image.manager.service.ImageService;
+import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,18 +32,15 @@ public class ImageController {
     public ImageController(ImageService imageService, PrometheusMeterRegistry mr) {
         this.imageService = imageService;
         outboundTrafficSummary = DistributionSummary
-                .builder("response.size")
+                .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
     }
 
-
+    @Timed
     @ResponseBody
     @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request) throws IOException {
-
-//        outboundTrafficSummary.record(request.getContentLength()); # todo: correctly record size of the request
-        outboundTrafficSummary.record(100); //dummy value
 
         List<ImageOperation> operations = ImageOperationParser.parse(request.getQueryString());
 
@@ -50,7 +52,9 @@ public class ImageController {
         }
 
         if (image.isPresent()) {
-            return ResponseEntity.ok(dumpImage(image.get()));
+            byte[] imageArray = dumpImage(image.get());
+            outboundTrafficSummary.record(imageArray.length);
+            return ResponseEntity.ok(imageArray);
         }
 
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);

@@ -10,21 +10,29 @@ import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
+
+import static java.awt.image.DataBuffer.getDataTypeSize;
 
 @Service
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
     private final ImageCache cache;
     private final Counter missCounter;
+    private final DistributionSummary originTrafficSummary;
 
     public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr) {
         this.props = props;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
+        originTrafficSummary = DistributionSummary
+                .builder("origin.traffic.size")
+                .baseUnit("bytes") // optional
+                .register(mr);
     }
 
     @Override
@@ -57,6 +65,8 @@ public class ImageServiceImpl implements ImageService {
             if (image == null) {
                 return Optional.empty();
             } else {
+                DataBuffer dataBuffer = image.getData().getDataBuffer();
+                originTrafficSummary.record(dataBuffer.getSize() * getDataTypeSize(dataBuffer.getDataType()));
                 return Optional.of(image);
             }
         } catch (Exception e) {
