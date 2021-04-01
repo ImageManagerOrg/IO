@@ -5,6 +5,11 @@ import java.util.*;
 public class ImageOperationParser {
 
     public static List<ImageOperation> parse(String query) {
+
+        if (query == null) {
+            return Collections.emptyList();
+        }
+
         List<ImageOperation> imageOperations = new ArrayList<>();
 
         String[] params = query.split("&");
