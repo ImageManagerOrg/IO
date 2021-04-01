@@ -14,6 +14,7 @@ public class ScaleOperation extends ImageOperation {
     public BufferedImage run(BufferedImage image) throws ImageOperationException {
 
         prepareNewDimensionImage(image.getWidth(), image.getHeight());
+        checkValidationOfArguments();
 
         Image resultingImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_DEFAULT);
         BufferedImage outputImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
@@ -37,6 +38,19 @@ public class ScaleOperation extends ImageOperation {
         else {
             newWidth = Integer.parseInt(widthValue);
             newHeight = Integer.parseInt(heightValue);
+        }
+    }
+
+    public void checkValidationOfArguments() throws ImageOperationException {
+
+        // target width or height is negative
+        if (newWidth < 0 || newHeight < 0) {
+            throw new ImageOperationException();
+        }
+
+        // target width or height is larger than 2^16
+        if ( newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)) {
+            throw new ImageOperationException();
         }
     }
 }
