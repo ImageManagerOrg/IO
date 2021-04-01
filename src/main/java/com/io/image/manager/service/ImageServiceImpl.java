@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -61,12 +63,12 @@ public class ImageServiceImpl implements ImageService {
         try {
             // FIXME: this does not look pretty
             URL url = new URL(props.getOriginServer() + filename);
-            BufferedImage image = ImageIO.read(url.openStream());
+            byte[] imgBytes = url.openStream().readAllBytes();
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
                 return Optional.empty();
             } else {
-                DataBuffer dataBuffer = image.getData().getDataBuffer();
-                originTrafficSummary.record(dataBuffer.getSize() * getDataTypeSize(dataBuffer.getDataType()));
+                originTrafficSummary.record(imgBytes.length);
                 return Optional.of(image);
             }
         } catch (Exception e) {
