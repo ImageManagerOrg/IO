@@ -11,7 +11,17 @@ public class CropOperation extends ImageOperation {
 
     @Override
     public BufferedImage run(BufferedImage image) throws ImageOperationException {
-        //TODO remember to handle errors properly (throw ImageOperationException when arg is wrong)
-        return image;
+
+        int startXPoint = Integer.parseInt(getArguments().getOrDefault("x", Integer.toString(0)));
+        int startYPoint = Integer.parseInt(getArguments().getOrDefault("y", Integer.toString(0)));
+
+        prepareNewDimensionImage(image.getWidth(), image.getHeight(), startXPoint, startYPoint);
+
+        return image.getSubimage(startXPoint, startYPoint, newWidth, newHeight);
+    }
+
+    public void prepareNewDimensionImage(int imageWidth, int imageHeight, int startXPoint, int startYPoint) {
+        newWidth = Integer.parseInt(getArguments().getOrDefault("w", Integer.toString(imageWidth - startXPoint)));
+        newHeight = Integer.parseInt(getArguments().getOrDefault("h", Integer.toString(imageHeight - startYPoint)));
     }
 }
