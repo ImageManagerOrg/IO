@@ -6,6 +6,8 @@ import java.util.Map;
 public abstract class ImageOperation {
     private final String name;
     private final Map<String, String> arguments;
+    protected int newWidth;
+    protected int newHeight;
 
     public String getName() {
         return name;
