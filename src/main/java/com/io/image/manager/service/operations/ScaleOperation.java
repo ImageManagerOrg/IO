@@ -1,9 +1,13 @@
 package com.io.image.manager.service.operations;
 
+import com.io.image.manager.exceptions.ImageOperationException;
+import lombok.extern.slf4j.Slf4j;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Map;
 
+@Slf4j
 public class ScaleOperation extends ImageOperation {
 
     public ScaleOperation(String name, Map<String, String> arguments) {
@@ -43,14 +47,12 @@ public class ScaleOperation extends ImageOperation {
 
     public void checkValidationOfArguments() throws ImageOperationException {
 
-        // target width or height is negative
         if (newWidth < 0 || newHeight < 0) {
-            throw new ImageOperationException();
+            throw new ImageOperationException("Target width or height is negative");
         }
 
-        // target width or height is larger than 2^16
         if ( newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)) {
-            throw new ImageOperationException();
+            throw new ImageOperationException("Target width or height is larger than 2^16");
         }
     }
 }

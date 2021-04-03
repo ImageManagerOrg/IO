@@ -1,5 +1,7 @@
 package com.io.image.manager.service.operations;
 
+import com.io.image.manager.exceptions.ImageOperationException;
+
 import java.awt.image.BufferedImage;
 import java.util.Map;
 
@@ -16,8 +18,6 @@ public abstract class ImageOperation {
     public Map<String, String> getArguments() {
         return arguments;
     }
-
-    static public class ImageOperationException extends Exception {}
 
     public ImageOperation(String name, Map<String, String> arguments) {
         this.name = name;
