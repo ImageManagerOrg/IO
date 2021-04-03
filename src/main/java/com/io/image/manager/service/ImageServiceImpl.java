@@ -1,5 +1,6 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.service.operations.ImageOperation;
@@ -23,7 +24,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Optional<BufferedImage> fetchAndCacheImage(String filename, List<ImageOperation> operations) throws ImageOperation.ImageOperationException, IOException {
+    public Optional<BufferedImage> fetchAndCacheImage(String filename, List<ImageOperation> operations) throws IOException, ImageOperationException {
         Optional<BufferedImage> image = fetchLocalImage(filename, operations);
         if (image.isPresent()) {
             return image;

@@ -1,11 +1,19 @@
 package com.io.image.manager.service.operations;
 
+import com.io.image.manager.exceptions.ImageOperationException;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+
 import java.awt.image.BufferedImage;
 import java.util.Map;
 
+@Slf4j
+@EqualsAndHashCode
 public abstract class ImageOperation {
     private final String name;
     private final Map<String, String> arguments;
+    protected int newWidth;
+    protected int newHeight;
 
     public String getName() {
         return name;
@@ -14,8 +22,6 @@ public abstract class ImageOperation {
     public Map<String, String> getArguments() {
         return arguments;
     }
-
-    static public class ImageOperationException extends Exception {}
 
     public ImageOperation(String name, Map<String, String> arguments) {
         this.name = name;
