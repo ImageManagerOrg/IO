@@ -40,9 +40,9 @@ public class ImageOperationParser {
     public static ImageOperation createImageOperation(String operationName) {
 
         return switch (operationName) {
-            case "crop" -> new CropOperation("crop", new HashMap<>());
-            case "scale" -> new ScaleOperation("scale", new HashMap<>());
-            default -> null;
+            case "crop" -> new CropOperation(operationName, new HashMap<>());
+            case "scale" -> new ScaleOperation(operationName, new HashMap<>());
+            default -> throw new IllegalArgumentException();
         };
     }
 }

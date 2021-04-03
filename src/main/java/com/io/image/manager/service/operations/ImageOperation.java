@@ -1,10 +1,14 @@
 package com.io.image.manager.service.operations;
 
 import com.io.image.manager.exceptions.ImageOperationException;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import java.awt.image.BufferedImage;
 import java.util.Map;
 
+@Slf4j
+@EqualsAndHashCode
 public abstract class ImageOperation {
     private final String name;
     private final Map<String, String> arguments;
