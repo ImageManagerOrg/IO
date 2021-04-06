@@ -21,6 +21,9 @@ services:
 
   grafana:
     image: grafana/grafana:7.3.6
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards/:/etc/dashboards/
     ports:
       - 3000:3000
     networks:
