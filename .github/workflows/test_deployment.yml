@@ -14,7 +14,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Generate prometheus config
       run: |
-        sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ GRAFANA_PASSWORD }}/" \
+        sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ secrets.GRAFANA_PASSWORD }}/" \
         prometheus/prod-prometheus.yml > generated-prometheus.yml
         
     - name: Copy prometheus config 
