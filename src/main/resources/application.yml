@@ -22,7 +22,7 @@ spring:
     activate:
       on-profile: prod
 image-manager:
-  origin-server: http://${ORIGIN}/
+  origin-server: ${ORIGIN}
   disk-cache-mount-point: ${CACHE_DIR}
 ---
 management:
