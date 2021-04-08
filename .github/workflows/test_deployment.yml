@@ -36,5 +36,5 @@ jobs:
         port: 22 
         script: |
           cd deployment
-          chmod +x deploy.sh
-          ./deploy.sh
+          chmod +x scripts/deploy.sh
+          ./scripts/deploy.sh
