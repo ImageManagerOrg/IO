@@ -12,7 +12,7 @@ services:
     volumes:
       - ./prometheus/:/etc/prometheus/
     command:
-      - "--config.file=/etc/prometheus/prod-prometheus.yml"
+      - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
     ports:
       - 9090:9090
@@ -20,9 +20,9 @@ services:
       - grafana
 
   app:
-    build: .
+    image: orgmanager/image_manager:latest
     ports:
-      - 8080:8080
+      - 80:8080
     networks:
       - grafana
 
