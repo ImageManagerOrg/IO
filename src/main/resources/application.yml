@@ -22,8 +22,8 @@ spring:
     activate:
       on-profile: prod
 image-manager:
-  origin-server: http://ORIGIN/
-  disk-cache-mount-point: cache
+  origin-server: http://${ORIGIN}/
+  disk-cache-mount-point: ${CACHE_DIR}
 ---
 management:
   metrics:
