@@ -1,7 +1,7 @@
 #!/bin/sh
 
 mkdir -p prometheus
-cp prometheus.yml prometheus/
+mv prometheus.yml prometheus/
 
 mv prod-docker-compose.yml docker-compose.yml
 
