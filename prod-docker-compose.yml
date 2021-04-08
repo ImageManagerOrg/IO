@@ -10,7 +10,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.21.0
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - app_data/prometheus/:/etc/prometheus/
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -21,6 +21,13 @@ services:
 
   app:
     image: orgmanager/image_manager:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - CACHE_DIR=/data/cache
+      # change it to be more versatile
+      - ORIGIN=3.125.156.169
+    volumes:
+      - app_data/app/cache:/data/cache
     ports:
       - 80:8080
     networks:
