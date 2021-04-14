@@ -11,9 +11,12 @@ services:
     image: prom/prometheus:v2.21.0
     volumes:
       - app_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--storage.tsdb.retention.size=1GB"
     ports:
       - 9090:9090
     networks:
