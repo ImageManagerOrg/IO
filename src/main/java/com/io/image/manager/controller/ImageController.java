@@ -1,15 +1,13 @@
 package com.io.image.manager.controller;
 
+import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.exceptions.ImageOperationException;
+import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
 import com.io.image.manager.service.ImageService;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.config.MeterFilter;
-import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,13 +27,15 @@ import java.util.Optional;
 public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
+    private final AppConfigurationProperties props;
 
-    public ImageController(ImageService imageService, PrometheusMeterRegistry mr) {
+    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) {
         this.imageService = imageService;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
+        this.props = props;
     }
 
     @Timed
@@ -44,10 +44,13 @@ public class ImageController {
     public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request)
             throws IOException, ImageOperationException {
 
+        // TODO: change origin to a one given in request headers, take it from config for now
+        var origin = new OriginServer(props.getOriginServer());
+
         List<ImageOperation> operations = ImageOperationParser.parse(request.getQueryString());
 
         Optional<BufferedImage> image;
-        image = imageService.fetchAndCacheImage(filename, operations);
+        image = imageService.fetchAndCacheImage(origin, filename, operations);
 
         if (image.isPresent()) {
             byte[] imageArray = dumpImage(image.get());

@@ -3,6 +3,7 @@ package com.io.image.manager.service;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -11,15 +12,12 @@ import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static java.awt.image.DataBuffer.getDataTypeSize;
 
 @Service
 public class ImageServiceImpl implements ImageService {
@@ -39,31 +37,47 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Optional<BufferedImage> fetchAndCacheImage(String filename, List<ImageOperation> operations) throws IOException, ImageOperationException {
-        Optional<BufferedImage> image = fetchLocalImage(filename, operations);
+    public Optional<BufferedImage> fetchAndCacheImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException, ImageOperationException {
+        Optional<BufferedImage> image = fetchLocalImage(origin, filename, operations);
         if (image.isPresent()) {
             return image;
         }
 
-        image = fetchRemoteImage(filename);
-        if (image.isPresent()) {
-            missCounter.increment();
+        // try to fetch local image but without any operations
+        if (operations.size() > 0) {
+            image = fetchLocalImage(origin, filename, Collections.emptyList());
+        }
 
+        // if no local image has been found then ask the origin server
+        if (image.isEmpty()) {
+            image = fetchRemoteImage(origin, filename);
+
+            // found remote image, increment miss counter
+            if (image.isPresent())  {
+                missCounter.increment();
+
+                // cache image without operations for an optimization
+                cache.storeImage(origin, image.get(), filename, Collections.emptyList());
+            }
+        }
+
+        if (image.isPresent()) {
             var img = image.get();
             for (var op : operations) {
                 img = op.run(img);
             }
-            cache.storeImage(img, filename, operations);
+            // cache image after performing operations
+            cache.storeImage(origin, img, filename, operations);
 
             return Optional.of(img);
         }
         return Optional.empty();
     }
 
-    private Optional<BufferedImage> fetchRemoteImage(String filename) {
+    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
         try {
             // FIXME: this does not look pretty
-            URL url = new URL(props.getOriginServer() + filename);
+            URL url = new URL(origin.getUrl() + filename);
             byte[] imgBytes = url.openStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
@@ -77,7 +91,7 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private Optional<BufferedImage> fetchLocalImage(String filename, List<ImageOperation> operations) throws IOException {
-        return cache.loadImage(filename, operations);
+    private Optional<BufferedImage> fetchLocalImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException {
+        return cache.loadImage(origin, filename, operations);
     }
 }

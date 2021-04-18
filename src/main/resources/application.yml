@@ -8,6 +8,7 @@ spring:
       on-profile: dev
 image-manager:
   origin-server: http://3.125.156.169/
+  disk-cache-mount-point: cache
 ---
 spring:
   config:
