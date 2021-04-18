@@ -9,6 +9,10 @@ spring:
 image-manager:
   origin-server: http://3.125.156.169/
   disk-cache-mount-point: cache
+logging:
+  level:
+    org.springframework.web: DEBUG
+    web: DEBUG
 ---
 spring:
   config:

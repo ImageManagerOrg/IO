@@ -3,10 +3,12 @@ package com.io.image.manager.cache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,7 +30,7 @@ public class DiskImageCache implements ImageCache {
 
     @Override
     public Optional<BufferedImage> loadImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException {
-        var path = getImageDirectory(origin, filename, operations);
+        var path = imageDirectory(origin, filename, operations);
         if (path.isEmpty()) {
             return Optional.empty();
         }
@@ -41,7 +43,7 @@ public class DiskImageCache implements ImageCache {
 
     @Override
     public void storeImage(OriginServer origin, BufferedImage image, String filename, List<ImageOperation> operations) throws IOException {
-        var path = getImageDirectory(origin, filename, operations);
+        var path = imageDirectory(origin, filename, operations);
         if (path.isEmpty()) {
             throw new IOException(String.format("Could not create disk path for file %s with given origin server %s\n", filename, origin));
         }
@@ -54,6 +56,34 @@ public class DiskImageCache implements ImageCache {
         // TODO: change jpg hardcoded format to take it from filename extension
         ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
     }
+
+    @Override
+    public void purgeOrigin(OriginServer origin) throws IOException {
+        var path = originDirectory(origin);
+        if (path.isEmpty()) return;
+
+        FileUtils.forceDelete(new File(path.get().toString()));
+    }
+
+    @Override
+    public void purgeImage(OriginServer origin, String filename) throws IOException {
+        var path = originDirectory(origin);
+        if (path.isEmpty()) return;
+
+        String withoutExtension = filename;
+
+        if (filename.contains(".")) {
+            withoutExtension = filename.substring(0, filename.lastIndexOf("."));
+        }
+
+        var imagePath = Path.of(path.get().toString(), withoutExtension);
+
+        var file = new File(imagePath.toString());
+        if (file.exists()) {
+            FileUtils.forceDelete(file);
+        }
+    }
+
 
     /*
         Returns image hash for given image filename, takes image operations into consideration.
@@ -89,14 +119,23 @@ public class DiskImageCache implements ImageCache {
         Directory is of format:
         {mount point}/{origin server hostname}/{filename without extension}/{image hash}
      */
-    private Optional<Path> getImageDirectory(OriginServer origin, String filename, List<ImageOperation> operations) {
+    private Optional<Path> imageDirectory(OriginServer origin, String filename, List<ImageOperation> operations) {
+
+        var originDir = originDirectory(origin);
+        if (originDir.isEmpty()) return Optional.empty();
+
+        var withoutExtension = filename.substring(0, filename.lastIndexOf('.'));
+        var hash = imageHash(filename, operations);
+
+        return Optional.of(Path.of(originDir.get().toString(), withoutExtension, hash));
+    }
+
+    private Optional<Path> originDirectory(OriginServer origin) {
         try {
             var originUri = new URI(origin.getUrl());
             var host = originUri.getHost();
-            var withoutExtension = filename.substring(0, filename.lastIndexOf('.'));
-            var hash = imageHash(filename, operations);
 
-            return Optional.of(Path.of(props.getDiskCacheMountPoint(), host, withoutExtension, hash));
+            return Optional.of(Path.of(props.getDiskCacheMountPoint(), host));
         } catch (URISyntaxException e) {
             return Optional.empty();
         }
