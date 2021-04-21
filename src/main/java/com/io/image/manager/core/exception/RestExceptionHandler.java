@@ -1,5 +1,6 @@
 package com.io.image.manager.core.exception;
 
+import com.io.image.manager.exceptions.ImageNoFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,14 @@ public class RestExceptionHandler {
         return new ExceptionResponse(Instant.now(), exception.getMessage());
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(ImageNoFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ExceptionResponse handleImageNotFoundException(ImageNoFoundException exception) {
+        return new ExceptionResponse(Instant.now(), exception.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ExceptionResponse handleException(Exception exception) {
         return new ExceptionResponse(Instant.now(), exception.getMessage());
     }
