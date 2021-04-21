@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.8"
 
 networks:
   grafana:
@@ -8,7 +8,7 @@ volumes:
 
 services:
   prometheus:
-    build: .
+    image: prom/prometheus:v2.21.0
     volumes:
       - app_data:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
