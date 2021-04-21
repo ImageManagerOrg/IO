@@ -31,6 +31,7 @@ services:
       - ORIGIN=http://3.125.156.169/
     volumes:
       - app_data:/data/cache
+      - app_data:/log/
     ports:
       - 80:8080
     networks:
