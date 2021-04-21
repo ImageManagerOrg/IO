@@ -32,7 +32,7 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logPath = System.getProperty("user.home") + "/IM_log.txt";
+    private final String logPath = "/log/IM_log.txt";
     private BufferedWriter writer = null;
 
     public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) {
