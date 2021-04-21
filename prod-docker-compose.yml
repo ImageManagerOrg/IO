@@ -34,7 +34,7 @@ services:
       - "b.com:10.0.156.95" 
       - "a.com:10.0.156.95" 
     volumes:
-      - /mnt/image-chache-part/cache:/data/cache
+      - /mnt/image-cache-part/cache:/data/cache
     ports:
       - 80:8080
     networks:
