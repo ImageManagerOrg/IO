@@ -27,10 +27,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
-      # change it to be more versatile
-      - ORIGIN=http://3.125.156.169/
+      - ORIGIN=http://origin/
+    extra_hosts:
+      # change it so private IPs are not hard coded 
+      - "origin:10.0.156.95" 
+      - "b.com:10.0.156.95" 
+      - "a.com:10.0.156.95" 
     volumes:
-      - app_data:/data/cache
+      - /mnt/image-chache-part/cache:/data/cache
     ports:
       - 80:8080
     networks:
