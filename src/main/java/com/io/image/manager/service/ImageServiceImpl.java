@@ -1,6 +1,6 @@
 package com.io.image.manager.service;
 
-import com.io.image.manager.exceptions.ImageNoFoundException;
+import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
@@ -42,7 +42,7 @@ public class ImageServiceImpl implements ImageService {
             OriginServer origin,
             String filename,
             List<ImageOperation> operations
-    ) throws IOException, ImageOperationException, ImageNoFoundException {
+    ) throws IOException, ImageOperationException, ImageNotFoundException {
         Optional<BufferedImage> image = fetchLocalImage(origin, filename, operations);
         if (image.isPresent()) {
             return image;
@@ -76,7 +76,7 @@ public class ImageServiceImpl implements ImageService {
 
             return Optional.of(img);
         }
-        throw new ImageNoFoundException("Image not found at origin: " + origin.getUrl());
+        throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
     private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
