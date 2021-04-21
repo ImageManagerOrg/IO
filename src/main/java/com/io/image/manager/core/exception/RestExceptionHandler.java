@@ -20,7 +20,7 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ExceptionResponse handleException(Exception exception) {
         return new ExceptionResponse(Instant.now(), exception.getMessage());
     }

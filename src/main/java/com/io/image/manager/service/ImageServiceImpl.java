@@ -37,7 +37,11 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Optional<BufferedImage> fetchAndCacheImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException, ImageOperationException {
+    public Optional<BufferedImage> fetchAndCacheImage(
+            OriginServer origin,
+            String filename,
+            List<ImageOperation> operations
+    ) throws IOException, ImageOperationException {
         Optional<BufferedImage> image = fetchLocalImage(origin, filename, operations);
         if (image.isPresent()) {
             return image;
@@ -53,7 +57,7 @@ public class ImageServiceImpl implements ImageService {
             image = fetchRemoteImage(origin, filename);
 
             // found remote image, increment miss counter
-            if (image.isPresent())  {
+            if (image.isPresent()) {
                 missCounter.increment();
 
                 // cache image without operations for an optimization
@@ -91,7 +95,11 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private Optional<BufferedImage> fetchLocalImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException {
+    private Optional<BufferedImage> fetchLocalImage(
+            OriginServer origin,
+            String filename,
+            List<ImageOperation> operations
+    ) throws IOException {
         return cache.loadImage(origin, filename, operations);
     }
 }
