@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 
 networks:
   grafana:
@@ -8,7 +8,7 @@ volumes:
 
 services:
   prometheus:
-    image: prom/prometheus:v2.21.0
+    build: .
     volumes:
       - app_data:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -31,6 +31,7 @@ services:
       - ORIGIN=http://3.125.156.169/
     volumes:
       - app_data:/data/cache
+      - /log/:/log/
     ports:
       - 80:8080
     networks:
