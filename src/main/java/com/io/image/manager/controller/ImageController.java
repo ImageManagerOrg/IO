@@ -10,6 +10,8 @@ import com.io.image.manager.service.ImageService;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,8 @@ public class ImageController {
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
 
+    private final Logger logger = LoggerFactory.getLogger(ImageController.class);
+
     public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) {
         this.imageService = imageService;
         outboundTrafficSummary = DistributionSummary
@@ -44,6 +48,14 @@ public class ImageController {
     @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request)
             throws IOException, ImageOperationException, ImageNotFoundException {
+
+        if (props.isUrlShowMode()) {
+            String url = filename;
+            if (request.getQueryString() != null) {
+                url += "?" + request.getQueryString();
+            }
+            logger.info(url);
+        }
 
         // TODO: change origin to a one given in request headers, take it from config for now
         var origin = new OriginServer(props.getOriginServer());
