@@ -1,5 +1,6 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
@@ -37,7 +38,11 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Optional<BufferedImage> fetchAndCacheImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException, ImageOperationException {
+    public Optional<BufferedImage> fetchAndCacheImage(
+            OriginServer origin,
+            String filename,
+            List<ImageOperation> operations
+    ) throws IOException, ImageOperationException, ImageNotFoundException {
         Optional<BufferedImage> image = fetchLocalImage(origin, filename, operations);
         if (image.isPresent()) {
             return image;
@@ -53,7 +58,7 @@ public class ImageServiceImpl implements ImageService {
             image = fetchRemoteImage(origin, filename);
 
             // found remote image, increment miss counter
-            if (image.isPresent())  {
+            if (image.isPresent()) {
                 missCounter.increment();
 
                 // cache image without operations for an optimization
@@ -71,7 +76,7 @@ public class ImageServiceImpl implements ImageService {
 
             return Optional.of(img);
         }
-        return Optional.empty();
+        throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
     private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
@@ -91,7 +96,11 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private Optional<BufferedImage> fetchLocalImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException {
+    private Optional<BufferedImage> fetchLocalImage(
+            OriginServer origin,
+            String filename,
+            List<ImageOperation> operations
+    ) throws IOException {
         return cache.loadImage(origin, filename, operations);
     }
 }

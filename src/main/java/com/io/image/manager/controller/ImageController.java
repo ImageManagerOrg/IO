@@ -1,6 +1,7 @@
 package com.io.image.manager.controller;
 
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
@@ -48,7 +49,8 @@ public class ImageController {
     @ResponseBody
     @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request)
-            throws IOException, ImageOperationException {
+            throws IOException, ImageOperationException, ImageNotFoundException {
+
         // TODO: change origin to a one given in request headers, take it from config for now
         var origin = new OriginServer(props.getOriginServer());
 
