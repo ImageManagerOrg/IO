@@ -34,7 +34,6 @@ public class WatermarkOperationTest {
         }
 
         return false;
-    }
     };
 
     @Test
@@ -45,8 +44,6 @@ public class WatermarkOperationTest {
                 new WatermarkOperation(Utils.WATERMARK_OPERATION_NAME, Map.of());
 
         // when
-        int expectedHeight = logoAghImagePrimary.getHeight();
-        int expectedWidth = logoAghImagePrimary.getWidth();
         var logoAghImageProcessed = watermarkOperation.run(logoAghImagePrimary);
 
         // then
