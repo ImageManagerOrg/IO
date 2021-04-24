@@ -61,18 +61,19 @@ public class ImageController {
             produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE}
     )
     public ResponseEntity<Object> getImage(
+            @RequestHeader("Host") String host,
             @PathVariable String filename,
             HttpServletRequest request
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
 
         if (props.isUrlShowMode()) {
-            String url = filename;
+            String url = String.format("https://%s/%s", host, filename);
             if (request.getQueryString() != null) {
                 url += "?" + request.getQueryString();
             }
             logger.info(url);
         }
-        var origin = originFromHost(props.getOriginServer());
+        var origin = originFromHost(host);
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
