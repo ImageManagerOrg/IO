@@ -1,5 +1,6 @@
 package com.io.image.manager.core.exception;
 
+import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,12 @@ public class RestExceptionHandler {
     @ExceptionHandler(ImageOperationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handleImageOperationException(ImageOperationException exception) {
+        return new ExceptionResponse(Instant.now(), exception.getMessage());
+    }
+
+    @ExceptionHandler(ConversionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionResponse handleConversionException(ConversionException exception) {
         return new ExceptionResponse(Instant.now(), exception.getMessage());
     }
 
