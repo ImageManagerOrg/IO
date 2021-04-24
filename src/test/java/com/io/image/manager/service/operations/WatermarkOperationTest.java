@@ -16,6 +16,27 @@ public class WatermarkOperationTest {
     @Autowired
     ImageService imageService;
 
+    boolean areImagesEqualSizesButDifferentPixelvise(BufferedImage buf1,BufferedImage buf2){
+        int width  = buf1.getWidth();
+        int height = buf1.getHeight();
+
+        if (buf1.getWidth() != buf2.getWidth() || buf1.getHeight() != buf2.getHeight()) {
+            return false;
+        }
+        // Loop over every pixel.
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Compare the pixels for equality.
+                if (buf1.getRGB(x, y) != buf2.getRGB(x, y)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    };
+
     @Test
     void watermarkExecuteOperationTest() throws IOException, ImageOperationException {
         // given
@@ -29,7 +50,6 @@ public class WatermarkOperationTest {
         var logoAghImageProcessed = watermarkOperation.run(logoAghImagePrimary);
 
         // then
-        assertEquals(expectedWidth, logoAghImageProcessed.getWidth());
-        assertEquals(expectedHeight, logoAghImageProcessed.getHeight());
+        assertTrue(areImagesEqualSizesButDifferentPixelvise(logoAghImageProcessed,logoAghImagePrimary));
     }
 }
