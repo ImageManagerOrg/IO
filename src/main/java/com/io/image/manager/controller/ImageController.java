@@ -52,7 +52,7 @@ public class ImageController {
 
     @Timed
     @ResponseBody
-    @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
+    @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE})
     public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request)
             throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
 
