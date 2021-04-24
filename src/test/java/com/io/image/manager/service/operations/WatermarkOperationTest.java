@@ -40,6 +40,7 @@ public class WatermarkOperationTest {
     void watermarkExecuteOperationTest() throws IOException, ImageOperationException {
         // given
         BufferedImage logoAghImagePrimary = Utils.loadTestImage();
+        BufferedImage logoAghImageControl = Utils.loadTestImage();
         WatermarkOperation watermarkOperation =
                 new WatermarkOperation(Utils.WATERMARK_OPERATION_NAME, Map.of());
 
@@ -47,6 +48,6 @@ public class WatermarkOperationTest {
         var logoAghImageProcessed = watermarkOperation.run(logoAghImagePrimary);
 
         // then
-        assertTrue(areImagesEqualSizesButDifferentPixelvise(logoAghImageProcessed,logoAghImagePrimary));
+        assertTrue(areImagesEqualSizesButDifferentPixelvise(logoAghImageProcessed,logoAghImageControl));
     }
 }

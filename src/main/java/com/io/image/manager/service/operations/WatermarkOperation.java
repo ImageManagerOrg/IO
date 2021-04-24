@@ -19,7 +19,7 @@ public class WatermarkOperation extends ImageOperation{
         Graphics graphics = image.getGraphics();
         graphics.setFont(new Font("Arial", Font.BOLD, 30));
         String watermark = "AGH Copyright @2021";
-        graphics.drawString(watermark, 0, 0);
+        graphics.drawString(watermark, 0, 100);
         graphics.dispose();
         return image;
     }
