@@ -1,5 +1,6 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
