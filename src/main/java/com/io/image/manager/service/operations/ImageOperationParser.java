@@ -1,12 +1,13 @@
 package com.io.image.manager.service.operations;
 
 import com.io.image.manager.data.ConversionInfo;
+import com.io.image.manager.exceptions.ConversionException;
 
 import java.util.*;
 
 public class ImageOperationParser {
 
-    public static ConversionInfo parseConversion(String query){
+    public static ConversionInfo parseConversion(String query)throws ConversionException {
         //TODO: get conversion paramters from query
 
         return new ConversionInfo("png",0);
