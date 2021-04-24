@@ -70,8 +70,9 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parse(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(request.getQueryString());
 
+        String normalized_filename = filename.substring(0,filename.indexOf("."))+".jpg";
         Optional<BufferedImage> image;
-        image = imageService.fetchAndCacheImage(origin, filename, operations);
+        image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
 
         if (image.isPresent()) {
             byte[] imageArray = dumpImage(image.get(), conversionInfo);
