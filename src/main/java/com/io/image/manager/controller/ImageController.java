@@ -68,7 +68,7 @@ public class ImageController {
         var origin = new OriginServer(props.getOriginServer());
 
         List<ImageOperation> operations = ImageOperationParser.parse(request.getQueryString());
-        ConversionInfo conversionInfo = ImageOperationParser.parseConversion(request.getQueryString()));
+        ConversionInfo conversionInfo = ImageOperationParser.parseConversion(request.getQueryString());
 
         Optional<BufferedImage> image;
         image = imageService.fetchAndCacheImage(origin, filename, operations);
