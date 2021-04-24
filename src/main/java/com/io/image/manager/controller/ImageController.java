@@ -20,16 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,11 +43,27 @@ public class ImageController {
         this.props = props;
     }
 
+    /**
+     * The following URL format applies:
+     * /[OBJECT_ID].[FORMAT]?[FORMAT_OPTIONS]&[WATERMARK_OPTION]&[OP_LIST]
+     * <p>
+     * Required: [OBJECT_ID], [FORMAT]
+     * Not required: [FORMAT_OPTIONS], [WATERMARK_OPTION], [OP_LIST]
+     * <p>
+     * In required header named "Host" is ip for origin
+     */
+
     @Timed
     @ResponseBody
-    @RequestMapping(value = "/{filename}", method = RequestMethod.GET, produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE})
-    public ResponseEntity<Object> getImage(@PathVariable String filename, HttpServletRequest request)
-            throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
+    @RequestMapping(
+            value = "/{filename}",
+            method = RequestMethod.GET,
+            produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE}
+    )
+    public ResponseEntity<Object> getImage(
+            @PathVariable String filename,
+            HttpServletRequest request
+    ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
 
         if (props.isUrlShowMode()) {
             String url = filename;
@@ -63,19 +72,16 @@ public class ImageController {
             }
             logger.info(url);
         }
+        var origin = originFromHost(props.getOriginServer());
 
-        // TODO: change origin to a one given in request headers, take it from config for now
-        var origin = new OriginServer(props.getOriginServer());
+        List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
+        ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
-        List<ImageOperation> operations = ImageOperationParser.parse(request.getQueryString());
-        ConversionInfo conversionInfo = ImageOperationParser.parseConversion(request.getQueryString());
-
-        String normalized_filename = filename.substring(0,filename.indexOf("."))+".jpg";
-        Optional<BufferedImage> image;
-        image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
+        String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
+        Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
 
         if (image.isPresent()) {
-            byte[] imageArray = dumpImage(image.get(), conversionInfo);
+            byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
             outboundTrafficSummary.record(imageArray.length);
             return ResponseEntity.ok(imageArray);
         }
@@ -83,27 +89,7 @@ public class ImageController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-    private byte[] dumpImage(BufferedImage image, ConversionInfo conversionInfo) throws IOException {
-        ByteArrayOutputStream bao = new ByteArrayOutputStream();
-        if(conversionInfo.getFormat().equals("png")) {
-            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
-            ImageWriter writer = (ImageWriter) writers.next();
-            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
-            writer.setOutput(ios);
-            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
-            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionType(imageWriteParam.getCompressionTypes()[conversionInfo.getPng_rate()]);
-            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
-        }else{
-            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpf");
-            ImageWriter writer = (ImageWriter) writers.next();
-            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
-            writer.setOutput(ios);
-            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
-            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionQuality(conversionInfo.getJpg_rate());
-            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
-        }
-        return bao.toByteArray();
+    private OriginServer originFromHost(String host) {
+        return new OriginServer(String.format("https://%s/", host));
     }
 }
