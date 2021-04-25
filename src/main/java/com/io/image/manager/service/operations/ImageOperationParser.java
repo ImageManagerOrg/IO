@@ -29,7 +29,7 @@ public class ImageOperationParser {
 
         List<String> params = new ArrayList<>(Arrays.asList(query.split("&")));
 
-        boolean isWatermark = isWatermarking(params);
+        boolean isWatermark = removeWatermarkParamIfExist(params);
 
         String[] args = params.get(0).split("=");
         if ("p".equals(args[0]) || "q".equals(args[0])) {
@@ -71,14 +71,14 @@ public class ImageOperationParser {
         return imageOperations;
     }
 
-    private static boolean isWatermarking(List<String> params) {
+    private static boolean removeWatermarkParamIfExist(List<String> params) {
         boolean isWatermark = false;
         if (params.size() > 0) {
-            String[] args = params.get(0).split("=");
-            if ("w".equals(args[0])) {
-                if ("true".equals(args[1])){
-                    isWatermark = true;
-                }
+            if (params.get(0).matches("w=true")) {
+                isWatermark = true;
+                params.remove(0);
+            }
+            else if (params.get(0).matches("w=false")) {
                 params.remove(0);
             }
         }
