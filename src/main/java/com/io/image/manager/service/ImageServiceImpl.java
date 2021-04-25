@@ -16,8 +16,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -83,7 +85,9 @@ public class ImageServiceImpl implements ImageService {
         try {
             // FIXME: this does not look pretty
             URL url = new URL(origin.getUrl() + filename);
-            byte[] imgBytes = url.openStream().readAllBytes();
+            URLConnection conn = url.openConnection();
+            Map<String,List<String>> headers = conn.getHeaderFields();
+            byte[] imgBytes = conn.getInputStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
                 return Optional.empty();
