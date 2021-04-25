@@ -24,6 +24,13 @@ services:
 
   app:
     image: orgmanager/image_manager:latest
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
@@ -39,4 +46,11 @@ services:
       - 80:8080
     networks:
       - grafana
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
