@@ -34,6 +34,9 @@ image-manager:
   url-show-mode: true
 ---
 management:
+  healths:
+    probles:
+      enabled: true
   metrics:
     export.prometheus.enabled: true
     distribution.percentiles.http.server.requests: 0.5, 0.90, 0.99
