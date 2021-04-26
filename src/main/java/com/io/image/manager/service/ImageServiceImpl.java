@@ -87,17 +87,13 @@ public class ImageServiceImpl implements ImageService {
             URL url = new URL(origin.getUrl() + filename);
             URLConnection conn = url.openConnection();
             Map<String,List<String>> headers = conn.getHeaderFields();
-            Optional<List<String>> cacheHead;
+            Optional<List<String>> cacheHead = Optional.empty();
             if(headers.containsKey("Cache-Control")) {
                 cacheHead = Optional.of(headers.get("Cache-Control"));
-            }else {
-                cacheHead = Optional.empty();
             }
-            Optional<List<String>> eTag;
+            Optional<List<String>> eTag = Optional.empty();
             if(headers.containsKey("ETag")) {
                  eTag = Optional.of(headers.get("ETag"));
-            }else {
-                eTag = Optional.empty();
             }
             byte[] imgBytes = conn.getInputStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
