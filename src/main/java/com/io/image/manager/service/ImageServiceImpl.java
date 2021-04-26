@@ -22,9 +22,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -90,7 +92,17 @@ public class ImageServiceImpl implements ImageService {
         try {
             // FIXME: this does not look pretty
             URL url = new URL(origin.getUrl() + filename);
-            byte[] imgBytes = url.openStream().readAllBytes();
+            URLConnection conn = url.openConnection();
+            Map<String,List<String>> headers = conn.getHeaderFields();
+            Optional<List<String>> cacheHead = Optional.empty();
+            if(headers.containsKey("Cache-Control")) {
+                cacheHead = Optional.of(headers.get("Cache-Control"));
+            }
+            Optional<List<String>> eTag = Optional.empty();
+            if(headers.containsKey("ETag")) {
+                 eTag = Optional.of(headers.get("ETag"));
+            }
+            byte[] imgBytes = conn.getInputStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
                 return Optional.empty();
