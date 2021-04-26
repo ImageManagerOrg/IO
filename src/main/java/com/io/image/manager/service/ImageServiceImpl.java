@@ -87,6 +87,7 @@ public class ImageServiceImpl implements ImageService {
             URL url = new URL(origin.getUrl() + filename);
             URLConnection conn = url.openConnection();
             Map<String,List<String>> headers = conn.getHeaderFields();
+            List<String> cacheHead = headers.get("Cache-Control");
             byte[] imgBytes = conn.getInputStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
