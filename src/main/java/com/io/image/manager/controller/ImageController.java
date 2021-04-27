@@ -36,8 +36,8 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-//    private final String logPath;
-//    private BufferedWriter writer;
+    private final String logPath;
+    private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
@@ -48,8 +48,8 @@ public class ImageController {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
-//        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
-//        writer = new BufferedWriter(new FileWriter(logPath, true));
+        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
+        writer = new BufferedWriter(new FileWriter(logPath, true));
     }
 
     /**
