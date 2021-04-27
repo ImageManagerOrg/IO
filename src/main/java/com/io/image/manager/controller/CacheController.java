@@ -20,7 +20,7 @@ public class CacheController {
     }
 
     @DeleteMapping(value = "/api/cache")
-    public void purgeCache(@RequestHeader("host") String host, @RequestBody DeleteCacheRequest request) throws IOException {
+    public void purgeCache(@RequestHeader("Host") String host, @RequestBody DeleteCacheRequest request) throws IOException {
         var origin = originFromHost(host);
         if (request.getKeys() != null) {
             request.getKeys().forEach((key) -> {
@@ -37,12 +37,12 @@ public class CacheController {
     }
 
     @DeleteMapping(value = "/api/cache/all")
-    public void purgeCache(@RequestHeader("host") String host) throws IOException {
+    public void purgeCache(@RequestHeader("Host") String host) throws IOException {
         this.cache.purgeOrigin(originFromHost(host));
     }
 
     private OriginServer originFromHost(String host) {
-        return new OriginServer(String.format("http://%s/", host));
+        return new OriginServer(String.format("https://%s/", host));
     }
 
     private void purgeImageByKey(OriginServer origin, int id) {

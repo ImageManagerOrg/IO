@@ -1,5 +1,6 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
@@ -11,13 +12,21 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -83,7 +92,17 @@ public class ImageServiceImpl implements ImageService {
         try {
             // FIXME: this does not look pretty
             URL url = new URL(origin.getUrl() + filename);
-            byte[] imgBytes = url.openStream().readAllBytes();
+            URLConnection conn = url.openConnection();
+            Map<String,List<String>> headers = conn.getHeaderFields();
+            Optional<List<String>> cacheHead = Optional.empty();
+            if(headers.containsKey("Cache-Control")) {
+                cacheHead = Optional.of(headers.get("Cache-Control"));
+            }
+            Optional<List<String>> eTag = Optional.empty();
+            if(headers.containsKey("ETag")) {
+                 eTag = Optional.of(headers.get("ETag"));
+            }
+            byte[] imgBytes = conn.getInputStream().readAllBytes();
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
             if (image == null) {
                 return Optional.empty();
@@ -102,5 +121,30 @@ public class ImageServiceImpl implements ImageService {
             List<ImageOperation> operations
     ) throws IOException {
         return cache.loadImage(origin, filename, operations);
+    }
+
+    @Override
+    public byte[] dumpImage(BufferedImage image, ConversionInfo conversionInfo) throws IOException {
+        ByteArrayOutputStream bao = new ByteArrayOutputStream();
+        if(conversionInfo.getFormat().equals("png")) {
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
+            ImageWriter writer = (ImageWriter) writers.next();
+            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
+            writer.setOutput(ios);
+            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
+            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            imageWriteParam.setCompressionType(imageWriteParam.getCompressionTypes()[conversionInfo.getPng_rate()]);
+            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
+        }else{
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+            ImageWriter writer = (ImageWriter) writers.next();
+            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
+            writer.setOutput(ios);
+            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
+            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            imageWriteParam.setCompressionQuality(conversionInfo.getJpg_rate());
+            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
+        }
+        return bao.toByteArray();
     }
 }

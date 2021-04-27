@@ -23,7 +23,7 @@ class ImageOperationParserTest {
         String query = null;
 
         // when
-        var actualOperations = ImageOperationParser.parse(query);
+        var actualOperations = ImageOperationParser.parseAndGetOperationList(query);
 
         // then
         assertEquals(Collections.emptyList(), actualOperations);
@@ -38,7 +38,7 @@ class ImageOperationParserTest {
         );
 
         // when
-        var actualOperations = ImageOperationParser.parse(QUERY_EXAMPLE);
+        var actualOperations = ImageOperationParser.parseAndGetOperationList(QUERY_EXAMPLE);
 
         // then
         assertEquals(imageOperations.size(), actualOperations.size());
@@ -50,7 +50,8 @@ class ImageOperationParserTest {
         // given
 
         // when then
-        assertThrows(IllegalArgumentException.class, () -> ImageOperationParser.parse(WRONG_QUERY_EXAMPLE));
+        assertThrows(IllegalArgumentException.class, () ->
+                ImageOperationParser.parseAndGetOperationList(WRONG_QUERY_EXAMPLE));
     }
 
 }

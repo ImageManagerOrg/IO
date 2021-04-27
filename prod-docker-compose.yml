@@ -21,9 +21,28 @@ services:
       - 9090:9090
     networks:
       - grafana
+  
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - grafana
 
   app:
     image: orgmanager/image_manager:latest
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
@@ -40,4 +59,11 @@ services:
       - 80:8080
     networks:
       - grafana
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
