@@ -9,6 +9,7 @@ spring:
 image-manager:
   origin-server: http://3.125.156.169/
   disk-cache-mount-point: cache
+  disk-log-mount-point: log
   url-show-mode: true
 logging:
   level:
@@ -31,6 +32,7 @@ spring:
 image-manager:
   origin-server: ${ORIGIN}
   disk-cache-mount-point: ${CACHE_DIR}
+  disk-log-mount-point: ${LOG_DIR}
   url-show-mode: true
 ---
 management:
