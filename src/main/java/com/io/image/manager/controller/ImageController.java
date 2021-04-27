@@ -36,18 +36,20 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logPath = "/log/IM_log.txt";
-    private BufferedWriter writer = null;
+    private final String logPath;
+    private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) {
+    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
         this.imageService = imageService;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
+        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
+        writer = new BufferedWriter(new FileWriter(logPath, true));
     }
 
     /**
@@ -72,7 +74,6 @@ public class ImageController {
             @PathVariable String filename,
             HttpServletRequest request
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
-
         if (props.isUrlShowMode()) {
             String url = String.format("https://%s/%s", host, filename);
             if (request.getQueryString() != null) {
@@ -85,16 +86,18 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
+        logRequest(filename, props.getOriginServer(), "null", operations);
+
         String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
         Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
 
         if (image.isPresent()) {
             byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
-            logRequest(filename, props.getOriginServer(), true, operations);
+            logRequest(filename, props.getOriginServer(), "true", operations);
             outboundTrafficSummary.record(imageArray.length);
             return ResponseEntity.ok(imageArray);
         }
-        logRequest(filename, props.getOriginServer(), false, operations);
+        logRequest(filename, props.getOriginServer(), "false", operations);
 
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
@@ -103,18 +106,15 @@ public class ImageController {
         return new OriginServer(String.format("https://%s/", host));
     }
 
-    private void logRequest(String filename, String origin, boolean isPresent, List<ImageOperation> operations){
+    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
         try {
-            if (writer == null){
-                writer = new BufferedWriter(new FileWriter(logPath, true));
-            }
             String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
             String opArgs = operations.stream().map(ImageOperation -> ImageOperation
                     .getArguments().toString())
                     .collect(Collectors.joining("|"));
             String timestamp = new Timestamp(System.currentTimeMillis()).toString();
 
-            String[] values = {timestamp, origin, filename, String.valueOf(isPresent), opNames};
+            String[] values = {timestamp, origin, filename, isPresent, opNames};
 
             for (String val: values) {
                 writer.append(val);
@@ -125,7 +125,6 @@ public class ImageController {
             writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            writer = null;
         }
 
     }
