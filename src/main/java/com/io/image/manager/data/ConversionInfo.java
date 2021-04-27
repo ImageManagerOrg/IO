@@ -7,7 +7,7 @@ public class ConversionInfo {
     private float jpg_rate;
     private int png_rate;
 
-    // rate = 1 is default value
+   
     public ConversionInfo(String format, int rate) throws ConversionException {
         if(format.equals("jpg")){
             if(rate>100 || rate<0) throw new ConversionException("Invalid compression rate for JPG format");
