@@ -49,6 +49,12 @@ services:
       timeout: 10s
       start_period: 10s
       retries: 3
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - CACHE_DIR=/data/cache
+      - ORIGIN=http://origin:5000/
+    volumes:
+      - ./cache/:/data/cache/
     restart: always
     ports:
       - 8080:8080
@@ -62,4 +68,18 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  origin:
+    build: ./origin_server
+    ports: 
+      - 5000:5000
+    networks:
+      - grafana
+    environment:
+      - TOTAL_IMAGES=5
+      - MOUNT_DIR=/data/images/
+      - FLASK_APP=main.py
+    volumes:
+      - ./images/:/data/images/
+
 

@@ -142,3 +142,4 @@ Desktop.ini
 
 cache/*
 !cache/.gitkeep
+images/
