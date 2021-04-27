@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.8"
 
 networks:
   grafana:
@@ -47,7 +47,7 @@ services:
       test: curl --fail http://localhost:8080/health || exit 1
       interval: 10s
       timeout: 10s
-#      start_period: 10s
+      start_period: 10s
       retries: 3
     restart: always
     ports:

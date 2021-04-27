@@ -114,25 +114,25 @@ public class ImageController {
     }
 
     private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
-//        try {
-//            String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
-//            String opArgs = operations.stream().map(ImageOperation -> ImageOperation
-//                    .getArguments().toString())
-//                    .collect(Collectors.joining("|"));
-//            String timestamp = new Timestamp(System.currentTimeMillis()).toString();
-//
-//            String[] values = {timestamp, origin, filename, isPresent, opNames};
-//
-//            for (String val: values) {
-//                writer.append(val);
-//                writer.append("`");
-//            }
-//            writer.append(opArgs);
-//            writer.append('\n');
-//            writer.flush();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
+            String opArgs = operations.stream().map(ImageOperation -> ImageOperation
+                    .getArguments().toString())
+                    .collect(Collectors.joining("|"));
+            String timestamp = new Timestamp(System.currentTimeMillis()).toString();
+
+            String[] values = {timestamp, origin, filename, isPresent, opNames};
+
+            for (String val: values) {
+                writer.append(val);
+                writer.append("`");
+            }
+            writer.append(opArgs);
+            writer.append('\n');
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }
