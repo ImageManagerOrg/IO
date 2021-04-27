@@ -46,7 +46,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
-#      - LOG_DIR=/data/log
+      - LOG_DIR=/data/log
       - ORIGIN=http://origin/
     extra_hosts:
       # change it so private IPs are not hard coded
