@@ -26,6 +26,9 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +39,7 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logPath;
+    private final String logDir;
     private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
@@ -48,8 +51,12 @@ public class ImageController {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
-        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
-        writer = new BufferedWriter(new FileWriter(logPath, true));
+        logDir = props.getDiskLogMountPoint();
+        Path logPath = Paths.get(logDir);
+        if (!Files.exists(logPath)) {
+            Files.createDirectory(logPath);
+        }
+        writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 
     /**
