@@ -13,9 +13,9 @@ public class ImageOperationParser {
 
         if (query == null) {
             if (fileExtension.equals("jpg")) {
-                return new ConversionInfo(fileExtension,100);
+                return new ConversionInfo(fileExtension, 100);
             } else {
-                return new ConversionInfo(fileExtension,9);
+                return new ConversionInfo(fileExtension, 9);
             }
         }
         else if (query.charAt(0) == 'c' || query.charAt(0) == 'q') {
@@ -23,9 +23,9 @@ public class ImageOperationParser {
             return new ConversionInfo(fileExtension, rate);
         }
         if (fileExtension.equals("jpg")) {
-            return new ConversionInfo(fileExtension,100);
+            return new ConversionInfo(fileExtension, 100);
         } else {
-            return new ConversionInfo(fileExtension,9);
+            return new ConversionInfo(fileExtension, 9);
         }
     }
 
