@@ -36,8 +36,8 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logPath;
-    private BufferedWriter writer;
+//    private final String logPath;
+//    private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
@@ -48,8 +48,8 @@ public class ImageController {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
-        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
-        writer = new BufferedWriter(new FileWriter(logPath, true));
+//        logPath = props.getDiskLogMountPoint() + "/IM_log.txt";
+//        writer = new BufferedWriter(new FileWriter(logPath, true));
     }
 
     /**
@@ -107,25 +107,25 @@ public class ImageController {
     }
 
     private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
-        try {
-            String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
-            String opArgs = operations.stream().map(ImageOperation -> ImageOperation
-                    .getArguments().toString())
-                    .collect(Collectors.joining("|"));
-            String timestamp = new Timestamp(System.currentTimeMillis()).toString();
-
-            String[] values = {timestamp, origin, filename, isPresent, opNames};
-
-            for (String val: values) {
-                writer.append(val);
-                writer.append("`");
-            }
-            writer.append(opArgs);
-            writer.append('\n');
-            writer.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
+//            String opArgs = operations.stream().map(ImageOperation -> ImageOperation
+//                    .getArguments().toString())
+//                    .collect(Collectors.joining("|"));
+//            String timestamp = new Timestamp(System.currentTimeMillis()).toString();
+//
+//            String[] values = {timestamp, origin, filename, isPresent, opNames};
+//
+//            for (String val: values) {
+//                writer.append(val);
+//                writer.append("`");
+//            }
+//            writer.append(opArgs);
+//            writer.append('\n');
+//            writer.flush();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     }
 }
