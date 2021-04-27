@@ -12,13 +12,21 @@ public class ImageOperationParser {
         String fileExtension = filename.split("\\.")[1];
 
         if (query == null) {
-            return new ConversionInfo(fileExtension,1);
+            if (fileExtension.equals("jpg")) {
+                return new ConversionInfo(fileExtension, 100);
+            } else {
+                return new ConversionInfo(fileExtension, 9);
+            }
         }
         else if (query.charAt(0) == 'c' || query.charAt(0) == 'q') {
             int rate = Integer.parseInt(query.split("&")[0].split("=")[1]);
             return new ConversionInfo(fileExtension, rate);
         }
-        return new ConversionInfo(fileExtension,1);
+        if (fileExtension.equals("jpg")) {
+            return new ConversionInfo(fileExtension, 100);
+        } else {
+            return new ConversionInfo(fileExtension, 9);
+        }
     }
 
     public static List<ImageOperation> parseAndGetOperationList(String query) {
