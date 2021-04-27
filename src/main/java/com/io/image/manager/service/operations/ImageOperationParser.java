@@ -11,17 +11,14 @@ public class ImageOperationParser {
 
         String fileExtension = filename.split("\\.")[1];
 
-        if (query == null) {
-            if (fileExtension.equals("jpg")) {
-                return new ConversionInfo(fileExtension, 100);
-            } else {
-                return new ConversionInfo(fileExtension, 9);
-            }
-        }
-        else if (query.charAt(0) == 'c' || query.charAt(0) == 'q') {
+        if (query != null && (query.charAt(0) == 'c' || query.charAt(0) == 'q')) {
             int rate = Integer.parseInt(query.split("&")[0].split("=")[1]);
             return new ConversionInfo(fileExtension, rate);
         }
+        return getDefaultConversionInfo(fileExtension);
+    }
+
+    public static ConversionInfo getDefaultConversionInfo(String fileExtension) throws ConversionException {
         if (fileExtension.equals("jpg")) {
             return new ConversionInfo(fileExtension, 100);
         } else {
@@ -37,20 +34,26 @@ public class ImageOperationParser {
 
         List<String> params = new ArrayList<>(Arrays.asList(query.split("&")));
 
-        boolean isWatermark = removeWatermarkParamIfExist(params);
+        if (params.size() > 0) {
+            String[] args = params.get(0).split("=");
+            if ("p".equals(args[0]) || "q".equals(args[0])) {
+                params.remove(0);
+            }
 
-        String[] args = params.get(0).split("=");
-        if ("p".equals(args[0]) || "q".equals(args[0])) {
-            params.remove(0);
+            return parseOperations(params);
         }
-
-        return parse(params, isWatermark);
+        return new ArrayList<>();
     }
 
-    private static List<ImageOperation> parse(List<String> params, boolean isWatermark) {
+    private static List<ImageOperation> parseOperations(List<String> params) {
 
         List<ImageOperation> imageOperations = new ArrayList<>();
         ImageOperation imageOperation = null;
+        boolean isWatermark = false;
+
+        if (params.size() > 0) {
+            isWatermark = removeWatermarkParamIfExist(params);
+        }
 
         if (params.size() > 0) {
             for (String param : params) {
