@@ -22,25 +22,41 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
+    private final String logDir;
+    private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) {
+    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
         this.imageService = imageService;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
+        logDir = props.getDiskLogMountPoint();
+        Path logPath = Paths.get(logDir);
+        if (!Files.exists(logPath)) {
+            Files.createDirectory(logPath);
+        }
+        writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 
     /**
@@ -65,7 +81,6 @@ public class ImageController {
             @PathVariable String filename,
             HttpServletRequest request
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
-
         if (props.isUrlShowMode()) {
             String url = String.format("https://%s/%s", host, filename);
             if (request.getQueryString() != null) {
@@ -79,19 +94,46 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
+        logRequest(filename, props.getOriginServer(), "null", operations);
+
         String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
         Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
 
         if (image.isPresent()) {
             byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
+            logRequest(filename, props.getOriginServer(), "true", operations);
             outboundTrafficSummary.record(imageArray.length);
             return ResponseEntity.ok(imageArray);
         }
+        logRequest(filename, props.getOriginServer(), "false", operations);
 
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
     private OriginServer originFromHost(String host) {
         return new OriginServer(String.format("https://%s/", host));
+    }
+
+    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
+        try {
+            String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
+            String opArgs = operations.stream().map(ImageOperation -> ImageOperation
+                    .getArguments().toString())
+                    .collect(Collectors.joining("|"));
+            String timestamp = new Timestamp(System.currentTimeMillis()).toString();
+
+            String[] values = {timestamp, origin, filename, isPresent, opNames};
+
+            for (String val: values) {
+                writer.append(val);
+                writer.append("`");
+            }
+            writer.append(opArgs);
+            writer.append('\n');
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

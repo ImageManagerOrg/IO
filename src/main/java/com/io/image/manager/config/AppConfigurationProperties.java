@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfigurationProperties {
     private String originServer;
     private String diskCacheMountPoint;
+    private String diskLogMountPoint;
     private boolean urlShowMode;
 
     public String getOriginServer() {
@@ -25,6 +26,10 @@ public class AppConfigurationProperties {
     public void setDiskCacheMountPoint(String diskCacheMountPoint) {
         this.diskCacheMountPoint = diskCacheMountPoint;
     }
+
+    public String getDiskLogMountPoint() { return diskLogMountPoint; }
+
+    public void setDiskLogMountPoint(String diskLogMountPoint) { this.diskLogMountPoint = diskLogMountPoint; }
 
     public boolean isUrlShowMode() {
         return urlShowMode;

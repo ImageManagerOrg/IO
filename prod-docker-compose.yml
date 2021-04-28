@@ -46,14 +46,16 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
+      - LOG_DIR=/data/log
       - ORIGIN=http://origin/
     extra_hosts:
-      # change it so private IPs are not hard coded 
-      - "origin:10.0.156.95" 
-      - "b.com:10.0.156.95" 
-      - "a.com:10.0.156.95" 
+      # change it so private IPs are not hard coded
+      - "origin:10.0.156.95"
+      - "b.com:10.0.156.95"
+      - "a.com:10.0.156.95"
     volumes:
       - /mnt/image-cache-part/cache:/data/cache
+      - /mnt/log:/data/log
     ports:
       - 80:8080
     networks:
