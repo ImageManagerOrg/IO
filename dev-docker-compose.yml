@@ -55,6 +55,7 @@ services:
       - ORIGIN=http://origin:5000/
     volumes:
       - ./cache/:/data/cache/
+      - ./log/:/log/
     restart: always
     ports:
       - 8080:8080
