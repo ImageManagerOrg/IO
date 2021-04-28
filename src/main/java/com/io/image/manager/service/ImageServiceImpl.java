@@ -2,16 +2,17 @@ package com.io.image.manager.service;
 
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.data.ConversionInfo;
+import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
+import com.io.image.manager.service.operations.ImageOperationParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-import org.springframework.core.io.AbstractResource;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -54,15 +55,17 @@ public class ImageServiceImpl implements ImageService {
             String filename,
             List<ImageOperation> operations,
             ConversionInfo info
-    ) throws IOException, ImageOperationException, ImageNotFoundException {
+    ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
         // check if image from given origin and with particular operations is already in cache
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
         if (cacheResult.isPresent()) {
             return cacheResult.get();
         }
 
-        // image has not been found in cache therefore try to load original image from cache, without applied operations
-        var image = cache.loadImage(origin, filename, Collections.emptyList(), info);
+        // TODO: apply correct default conversion info
+        // image with given operations and conversion info has not been found in cache, try to find original image with default params
+        var defaultConversion = ImageOperationParser.getDefaultConversionInfo("jpg");
+        var image = cache.loadImage(origin, filename, Collections.emptyList(), defaultConversion);
 
         // if no local image has been found then ask the origin server
         if (image.isEmpty()) {
@@ -72,8 +75,8 @@ public class ImageServiceImpl implements ImageService {
             if (image.isPresent()) {
                 missCounter.increment();
 
-                // cache image without operations for an optimization
-                cache.storeImage(origin, image.get(), filename, Collections.emptyList(), info);
+                // cache image without operations and conversion for an optimization
+                cache.storeImage(origin, image.get(), filename, Collections.emptyList(), defaultConversion);
             }
         }
 

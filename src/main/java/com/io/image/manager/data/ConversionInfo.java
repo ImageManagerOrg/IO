@@ -8,7 +8,6 @@ public class ConversionInfo {
     private float jpgRate;
     private float pngRate;
 
-
     public ConversionInfo(String format, int rate) throws ConversionException {
         this.rate = rate;
         if (format.equals("jpg")) {
