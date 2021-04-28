@@ -88,7 +88,8 @@ public class ImageController {
             }
             logger.info(url);
         }
-        var origin = originFromHost(host);
+//        var origin = originFromHost(host);
+        var origin = new OriginServer(props.getOriginServer());
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
