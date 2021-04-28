@@ -55,13 +55,12 @@ services:
       - ORIGIN=http://origin:5000/
     volumes:
       - ./cache/:/data/cache/
+      - ./log/:/log/
     restart: always
     ports:
       - 8080:8080
     networks:
       - grafana
-    volumes:
-      - ./log/:/log/
 
   autoheal:
     restart: always
@@ -78,7 +77,7 @@ services:
     networks:
       - grafana
     environment:
-      - TOTAL_IMAGES=5
+      - TOTAL_IMAGES=10
       - MOUNT_DIR=/data/images/
       - FLASK_APP=main.py
     volumes:

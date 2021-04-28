@@ -1,5 +1,6 @@
 package com.io.image.manager.controller;
 
+import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
@@ -14,16 +15,13 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.AbstractResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -76,7 +73,7 @@ public class ImageController {
             method = RequestMethod.GET,
             produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE}
     )
-    public ResponseEntity<Object> getImage(
+    public ResponseEntity<AbstractResource> getImage(
             @RequestHeader("Host") String host,
             @PathVariable String filename,
             HttpServletRequest request
@@ -95,19 +92,20 @@ public class ImageController {
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
         logRequest(filename, props.getOriginServer(), "null", operations);
+        String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
 
-        String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
-        Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
-
-        if (image.isPresent()) {
-            byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
-            logRequest(filename, props.getOriginServer(), "true", operations);
-            outboundTrafficSummary.record(imageArray.length);
-            return ResponseEntity.ok(imageArray);
+        CacheResult cacheResult;
+        try {
+            cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
+        } catch (ImageNotFoundException e) {
+            logRequest(filename, props.getOriginServer(), "false", operations);
+            throw e;
         }
-        logRequest(filename, props.getOriginServer(), "false", operations);
 
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        logRequest(filename, props.getOriginServer(), "true", operations);
+        outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
+
+        return ResponseEntity.ok(cacheResult.getCacheResource());
     }
 
     private OriginServer originFromHost(String host) {
