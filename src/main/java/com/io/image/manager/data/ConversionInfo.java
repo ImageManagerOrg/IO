@@ -5,7 +5,7 @@ import com.io.image.manager.exceptions.ConversionException;
 public class ConversionInfo {
     private final String format;
     private float jpg_rate;
-    private int png_rate;
+    private float png_rate;
 
 
     public ConversionInfo(String format, int rate) throws ConversionException {
@@ -16,7 +16,7 @@ public class ConversionInfo {
         }else if(format.equals("png")){
             if(rate>9 || rate<0) throw new ConversionException("Invalid compression rate for PNG format");
             this.format = format;
-            this.png_rate = rate;
+            this.png_rate = (float)(9-rate)/10;
         }else{
             throw new ConversionException("Unknown image format");
         }
@@ -30,7 +30,7 @@ public class ConversionInfo {
         return jpg_rate;
     }
 
-    public int getPng_rate() {
+    public float getPng_rate() {
         return png_rate;
     }
 }
