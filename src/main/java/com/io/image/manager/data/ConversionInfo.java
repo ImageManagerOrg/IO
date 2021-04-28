@@ -4,11 +4,13 @@ import com.io.image.manager.exceptions.ConversionException;
 
 public class ConversionInfo {
     private final String format;
+    private final int rate;
     private float jpgRate;
     private float pngRate;
 
 
     public ConversionInfo(String format, int rate) throws ConversionException {
+        this.rate = rate;
         if (format.equals("jpg")) {
             if (rate > 100 || rate < 0) throw new ConversionException("Invalid compression rate for JPG format");
             this.format = format;
@@ -20,6 +22,10 @@ public class ConversionInfo {
         } else {
             throw new ConversionException("Unknown image format");
         }
+    }
+
+    public String hashString() {
+        return format + Integer.toString(rate);
     }
 
     public String getFormat() {

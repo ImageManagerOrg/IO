@@ -1,5 +1,6 @@
 package com.io.image.manager.controller;
 
+import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
@@ -14,6 +15,9 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.AbstractResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,12 +64,11 @@ public class ImageController {
             method = RequestMethod.GET,
             produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE}
     )
-    public ResponseEntity<Object> getImage(
+    public ResponseEntity<AbstractResource> getImage(
             @RequestHeader("Host") String host,
             @PathVariable String filename,
             HttpServletRequest request
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
-
         if (props.isUrlShowMode()) {
             String url = String.format("https://%s/%s", host, filename);
             if (request.getQueryString() != null) {
@@ -79,16 +82,12 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
-        String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
-        Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
+        String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
+        var cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
 
-        if (image.isPresent()) {
-            byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
-            outboundTrafficSummary.record(imageArray.length);
-            return ResponseEntity.ok(imageArray);
-        }
+        outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return ResponseEntity.ok(cacheResult.getCacheResource());
     }
 
     private OriginServer originFromHost(String host) {

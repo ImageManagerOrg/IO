@@ -76,7 +76,7 @@ services:
     networks:
       - grafana
     environment:
-      - TOTAL_IMAGES=5
+      - TOTAL_IMAGES=10
       - MOUNT_DIR=/data/images/
       - FLASK_APP=main.py
     volumes:
