@@ -133,7 +133,7 @@ public class ImageServiceImpl implements ImageService {
             writer.setOutput(ios);
             ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
             imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionQuality(conversionInfo.getPng_rate());
+            imageWriteParam.setCompressionQuality(conversionInfo.getPngRate());
             writer.write(null, new IIOImage(image, null, null), imageWriteParam);
         }else{
             Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
@@ -142,7 +142,7 @@ public class ImageServiceImpl implements ImageService {
             writer.setOutput(ios);
             ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
             imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionQuality(conversionInfo.getJpg_rate());
+            imageWriteParam.setCompressionQuality(conversionInfo.getJpgRate());
             writer.write(null, new IIOImage(image, null, null), imageWriteParam);
         }
         return bao.toByteArray();
