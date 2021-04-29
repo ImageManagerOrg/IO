@@ -17,6 +17,13 @@ logging:
     web: DEBUG
 ---
 spring:
+  datasource:
+    url: jdbc:h2:file:./testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
   config:
     activate:
       on-profile: test
@@ -59,3 +66,4 @@ management:
         # prometheus looks at /metrics by default when scraping for metrics
         metrics: spring-metrics
         prometheus: metrics
+

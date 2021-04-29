@@ -7,6 +7,7 @@ import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
@@ -35,12 +36,14 @@ import java.util.Optional;
 @Service
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
+    private final CacheRecordRepository repository;
     private final ImageCache cache;
     private final Counter missCounter;
     private final DistributionSummary originTrafficSummary;
 
-    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr) {
+    public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr) {
         this.props = props;
+        this.repository = repository;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
         originTrafficSummary = DistributionSummary
