@@ -8,4 +8,5 @@ import java.io.IOException;
 public interface CacheResult {
      AbstractResource getCacheResource();
      long totalResourceSizeInBytes() throws IOException;
+     String resultHash();
 }

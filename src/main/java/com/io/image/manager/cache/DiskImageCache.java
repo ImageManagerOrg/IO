@@ -53,7 +53,7 @@ public class DiskImageCache implements ImageCache {
             return Optional.empty();
         }
 
-        return Optional.of(new DiskCacheResult(path.get()));
+        return Optional.of(new DiskCacheResult(path.get(),  imageHash(filename, operations, info)));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DiskImageCache implements ImageCache {
         // TODO: change jpg hardcoded format to take it from filename extension
         ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
 
-        return new DiskCacheResult(path.get());
+        return new DiskCacheResult(path.get(),  imageHash(filename, operations, info));
     }
 
     @Override

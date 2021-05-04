@@ -13,6 +13,7 @@ import java.nio.file.Path;
 @AllArgsConstructor
 public class DiskCacheResult implements CacheResult {
     private Path imageDestination;
+    private String resultHash;
 
     @Override
     public AbstractResource getCacheResource() {
@@ -22,5 +23,10 @@ public class DiskCacheResult implements CacheResult {
     @Override
     public long totalResourceSizeInBytes() throws IOException {
         return Files.size(imageDestination);
+    }
+
+    @Override
+    public String resultHash() {
+        return this.resultHash();
     }
 }

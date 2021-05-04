@@ -6,6 +6,7 @@ import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
+import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @RestController
 public class ImageController {
     private final ImageService imageService;
+    private final CacheRecordRepository cacheRepository;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
     private final String logDir;
@@ -41,8 +43,9 @@ public class ImageController {
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
+    public ImageController(ImageService imageService, CacheRecordRepository cacheRepository, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
         this.imageService = imageService;
+        this.cacheRepository = cacheRepository;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional

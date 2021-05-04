@@ -6,12 +6,13 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface CacheRecordRepository extends CrudRepository<CacheRecord, Long> {
-    CacheRecord findByOriginAndImageId(String origin, int imageId);
+    Optional<CacheRecord> findByOriginAndImageId(String origin, int imageId);
 
-
-    CacheRecord findByOriginAndNameHash(String origin, String nameHash);
+    Optional<CacheRecord> findByOriginAndNameHash(String origin, String nameHash);
 
     @Modifying(clearAutomatically = true)
     @Query("update CacheRecord cr set cr.hits = cr.hits + 1 where cr.origin = :origin and cr.nameHash = :nameHash")
