@@ -1,6 +1,7 @@
 package com.io.image.manager.cache;
 
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import org.apache.commons.io.FileUtils;
@@ -29,21 +30,35 @@ public class DiskImageCache implements ImageCache {
     }
 
     @Override
-    public Optional<BufferedImage> loadImage(OriginServer origin, String filename, List<ImageOperation> operations) throws IOException {
-        var path = imageDirectory(origin, filename, operations);
-        if (path.isEmpty()) {
+    public Optional<BufferedImage> loadImage(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws IOException {
+        var cacheResult = checkInCache(origin, filename, operations, info);
+        if (cacheResult.isEmpty()) {
             return Optional.empty();
         }
-        if (Files.exists(path.get())) {
-            BufferedImage bufferedImage = ImageIO.read(Files.newInputStream(path.get()));
-            return Optional.of(bufferedImage);
-        }
-        return Optional.empty();
+
+        var path = ((DiskCacheResult)cacheResult.get()).getImageDestination();
+        BufferedImage bufferedImage = ImageIO.read(Files.newInputStream(path));
+        return Optional.of(bufferedImage);
     }
 
     @Override
-    public void storeImage(OriginServer origin, BufferedImage image, String filename, List<ImageOperation> operations) throws IOException {
-        var path = imageDirectory(origin, filename, operations);
+    public Optional<CacheResult> checkInCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws IOException {
+        var path = imageDirectory(origin, filename, operations, info);
+
+        if (path.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (Files.notExists(path.get())) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new DiskCacheResult(path.get()));
+    }
+
+    @Override
+    public CacheResult storeImage(OriginServer origin, BufferedImage image, String filename, List<ImageOperation> operations, ConversionInfo info) throws IOException {
+        var path = imageDirectory(origin, filename, operations, info);
         if (path.isEmpty()) {
             throw new IOException(String.format("Could not create disk path for file %s with given origin server %s\n", filename, origin));
         }
@@ -55,6 +70,8 @@ public class DiskImageCache implements ImageCache {
 
         // TODO: change jpg hardcoded format to take it from filename extension
         ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
+
+        return new DiskCacheResult(path.get());
     }
 
     @Override
@@ -90,7 +107,7 @@ public class DiskImageCache implements ImageCache {
 
         Note that different order of given operations will result in completely different image hash.
      */
-    private String imageHash(String filename, List<ImageOperation> operations) {
+    private String imageHash(String filename, List<ImageOperation> operations, ConversionInfo info) {
         StringBuffer buffer = new StringBuffer();
         buffer.append(filename);
 
@@ -101,6 +118,8 @@ public class DiskImageCache implements ImageCache {
                     .getArguments()
                     .forEach((key, value) -> buffer.append(key).append(value));
         }
+
+        buffer.append(info.hashString());
 
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -119,13 +138,12 @@ public class DiskImageCache implements ImageCache {
         Directory is of format:
         {mount point}/{origin server hostname}/{filename without extension}/{image hash}
      */
-    private Optional<Path> imageDirectory(OriginServer origin, String filename, List<ImageOperation> operations) {
-
+    private Optional<Path> imageDirectory(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) {
         var originDir = originDirectory(origin);
         if (originDir.isEmpty()) return Optional.empty();
 
         var withoutExtension = filename.substring(0, filename.lastIndexOf('.'));
-        var hash = imageHash(filename, operations);
+        var hash = imageHash(filename, operations, info);
 
         return Optional.of(Path.of(originDir.get().toString(), withoutExtension, hash));
     }

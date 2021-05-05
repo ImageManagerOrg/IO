@@ -1,12 +1,15 @@
 package com.io.image.manager.service;
 
+import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.data.ConversionInfo;
+import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
+import com.io.image.manager.service.operations.ImageOperationParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -47,20 +50,22 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public Optional<BufferedImage> fetchAndCacheImage(
+    public CacheResult fetchAndCacheImage(
             OriginServer origin,
             String filename,
-            List<ImageOperation> operations
-    ) throws IOException, ImageOperationException, ImageNotFoundException {
-        Optional<BufferedImage> image = fetchLocalImage(origin, filename, operations);
-        if (image.isPresent()) {
-            return image;
+            List<ImageOperation> operations,
+            ConversionInfo info
+    ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
+        // check if image from given origin and with particular operations is already in cache
+        var cacheResult = cache.checkInCache(origin, filename, operations, info);
+        if (cacheResult.isPresent()) {
+            return cacheResult.get();
         }
 
-        // try to fetch local image but without any operations
-        if (operations.size() > 0) {
-            image = fetchLocalImage(origin, filename, Collections.emptyList());
-        }
+        // TODO: apply correct default conversion info
+        // image with given operations and conversion info has not been found in cache, try to find original image with default params
+        var defaultConversion = ImageOperationParser.getDefaultConversionInfo("jpg");
+        var image = cache.loadImage(origin, filename, Collections.emptyList(), defaultConversion);
 
         // if no local image has been found then ask the origin server
         if (image.isEmpty()) {
@@ -70,8 +75,8 @@ public class ImageServiceImpl implements ImageService {
             if (image.isPresent()) {
                 missCounter.increment();
 
-                // cache image without operations for an optimization
-                cache.storeImage(origin, image.get(), filename, Collections.emptyList());
+                // cache image without operations and conversion for an optimization
+                cache.storeImage(origin, image.get(), filename, Collections.emptyList(), defaultConversion);
             }
         }
 
@@ -80,10 +85,9 @@ public class ImageServiceImpl implements ImageService {
             for (var op : operations) {
                 img = op.run(img);
             }
+            img = compressImage(img, info);
             // cache image after performing operations
-            cache.storeImage(origin, img, filename, operations);
-
-            return Optional.of(img);
+            return cache.storeImage(origin, img, filename, operations, info);
         }
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
@@ -115,36 +119,27 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
-    private Optional<BufferedImage> fetchLocalImage(
-            OriginServer origin,
-            String filename,
-            List<ImageOperation> operations
-    ) throws IOException {
-        return cache.loadImage(origin, filename, operations);
-    }
-
-    @Override
-    public byte[] dumpImage(BufferedImage image, ConversionInfo conversionInfo) throws IOException {
+    public BufferedImage compressImage(BufferedImage image, ConversionInfo conversionInfo) throws IOException {
         ByteArrayOutputStream bao = new ByteArrayOutputStream();
-        if(conversionInfo.getFormat().equals("png")) {
-            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("png");
-            ImageWriter writer = (ImageWriter) writers.next();
-            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
-            writer.setOutput(ios);
-            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
-            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionType(imageWriteParam.getCompressionTypes()[conversionInfo.getPng_rate()]);
-            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
-        }else{
-            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
-            ImageWriter writer = (ImageWriter) writers.next();
-            ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
-            writer.setOutput(ios);
-            ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
-            imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            imageWriteParam.setCompressionQuality(conversionInfo.getJpg_rate());
-            writer.write(null, new IIOImage(image, null, null), imageWriteParam);
+
+        var format = conversionInfo.getFormat();
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(format);
+        ImageWriter writer = (ImageWriter) writers.next();
+        ImageWriteParam imageWriteParam = writer.getDefaultWriteParam();
+        imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+
+
+        ImageOutputStream ios = ImageIO.createImageOutputStream(bao);
+        writer.setOutput(ios);
+
+        if (format.equals("png")) {
+            imageWriteParam.setCompressionQuality(conversionInfo.getPngRate());
+        } else {
+            imageWriteParam.setCompressionQuality(conversionInfo.getJpgRate());
         }
-        return bao.toByteArray();
+        writer.write(null, new IIOImage(image, null, null), imageWriteParam);
+
+        var is = new ByteArrayInputStream(bao.toByteArray());
+        return ImageIO.read(is);
     }
 }
