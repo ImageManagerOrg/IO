@@ -10,6 +10,7 @@ public class AppConfigurationProperties {
     private String diskCacheMountPoint;
     private String diskLogMountPoint;
     private boolean urlShowMode;
+    private boolean logRequests;
 
     public String getOriginServer() {
         return originServer;
@@ -37,5 +38,12 @@ public class AppConfigurationProperties {
 
     public void setUrlShowMode(boolean urlShowMode) {
         this.urlShowMode = urlShowMode;
+    }
+
+    public boolean getLogRequests() {return logRequests; }
+
+    public void setLogRequests(String logRequests) {
+        this.logRequests = logRequests.equals("true");
+        System.out.println("PROPS" + logRequests);
     }
 }
