@@ -39,7 +39,7 @@ public class ImageController {
     private final ImageService imageService;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logDir;
+    private final boolean logRequests;
     private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
@@ -51,12 +51,16 @@ public class ImageController {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
-        logDir = props.getDiskLogMountPoint();
-        Path logPath = Paths.get(logDir);
-        if (!Files.exists(logPath)) {
-            Files.createDirectory(logPath);
+        this.logRequests = props.getLogRequests();
+
+        if (this.logRequests) {
+            String logDir = props.getDiskLogMountPoint();
+            Path logPath = Paths.get(logDir);
+            if (!Files.exists(logPath)) {
+                Files.createDirectory(logPath);
+            }
+            writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
         }
-        writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 
     /**
@@ -94,18 +98,16 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
-        logRequest(filename, props.getOriginServer(), "null", operations);
-
         String normalized_filename = filename.substring(0, filename.indexOf(".")) + ".jpg";
         Optional<BufferedImage> image = imageService.fetchAndCacheImage(origin, normalized_filename, operations);
 
         if (image.isPresent()) {
             byte[] imageArray = imageService.dumpImage(image.get(), conversionInfo);
-            logRequest(filename, props.getOriginServer(), "true", operations);
+            if(logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
             outboundTrafficSummary.record(imageArray.length);
             return ResponseEntity.ok(imageArray);
         }
-        logRequest(filename, props.getOriginServer(), "false", operations);
+        if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
 
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }

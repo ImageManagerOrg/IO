@@ -53,15 +53,16 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - CACHE_DIR=/data/cache
       - ORIGIN=http://origin:5000/
+      - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+      - LOG_REQUESTS=false
     volumes:
       - ./cache/:/data/cache/
+      - ./log/:/data/log/
     restart: always
     ports:
       - 8080:8080
     networks:
       - grafana
-    volumes:
-      - ./log/:/log/
 
   autoheal:
     restart: always
