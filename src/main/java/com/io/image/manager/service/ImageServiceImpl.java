@@ -1,5 +1,9 @@
 package com.io.image.manager.service;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.HttpClientConnectionManager;
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
@@ -13,6 +17,9 @@ import com.io.image.manager.service.operations.ImageOperationParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -24,6 +31,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collections;
@@ -54,7 +62,8 @@ public class ImageServiceImpl implements ImageService {
             OriginServer origin,
             String filename,
             List<ImageOperation> operations,
-            ConversionInfo info
+            ConversionInfo info,
+            CloseableHttpClient client
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
         // check if image from given origin and with particular operations is already in cache
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
@@ -69,7 +78,7 @@ public class ImageServiceImpl implements ImageService {
 
         // if no local image has been found then ask the origin server
         if (image.isEmpty()) {
-            image = fetchRemoteImage(origin, filename);
+            image = fetchRemoteImage(origin, filename, client);
 
             // found remote image, increment miss counter
             if (image.isPresent()) {
@@ -92,27 +101,37 @@ public class ImageServiceImpl implements ImageService {
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
-    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
-        try {
+    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename, CloseableHttpClient client) {
             // FIXME: this does not look pretty
-            URL url = new URL(origin.getUrl() + filename);
-            URLConnection conn = url.openConnection();
-            Map<String,List<String>> headers = conn.getHeaderFields();
-            Optional<List<String>> cacheHead = Optional.empty();
-            if(headers.containsKey("Cache-Control")) {
-                cacheHead = Optional.of(headers.get("Cache-Control"));
-            }
-            Optional<List<String>> eTag = Optional.empty();
-            if(headers.containsKey("ETag")) {
-                 eTag = Optional.of(headers.get("ETag"));
-            }
-            byte[] imgBytes = conn.getInputStream().readAllBytes();
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
-            if (image == null) {
+            try {
+                    HttpGet get = new HttpGet(origin.getUrl() + filename);
+                    CloseableHttpResponse response = client.execute(get);
+                    try{
+                    HttpEntity entity = response.getEntity();
+                    InputStream is = entity.getContent();
+
+                    Optional<String> cacheHead = Optional.empty();
+                    if (response.getHeaders("Cache-Control") != null) {
+                        cacheHead = Optional.of(response.getHeaders("Cache-Control").toString());
+                    }
+                    Optional<String> eTag = Optional.empty();
+                    if (response.getHeaders("ETag") != null) {
+                        eTag = Optional.of(response.getHeaders("ETag").toString());
+                    }
+                    //byte[] imgBytes = conn.getInputStream().readAllBytes();
+                    byte[] imgBytes = is.readAllBytes();
+                    is.close();
+                    BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
+                    if (image == null) {
+                        return Optional.empty();
+                    } else {
+                        originTrafficSummary.record(imgBytes.length);
+                        return Optional.of(image);
+                    }
+            } catch (Exception e) {
                 return Optional.empty();
-            } else {
-                originTrafficSummary.record(imgBytes.length);
-                return Optional.of(image);
+            } finally {
+                response.close();
             }
         } catch (Exception e) {
             return Optional.empty();

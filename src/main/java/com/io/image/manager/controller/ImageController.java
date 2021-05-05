@@ -1,5 +1,9 @@
 package com.io.image.manager.controller;
 
+import  org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import  org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
@@ -38,6 +42,9 @@ public class ImageController {
     private final AppConfigurationProperties props;
     private final String logDir;
     private BufferedWriter writer;
+    private CloseableHttpClient client;
+
+    private final HttpClientConnectionManager cm;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
@@ -53,6 +60,10 @@ public class ImageController {
         if (!Files.exists(logPath)) {
             Files.createDirectory(logPath);
         }
+        cm = new PoolingHttpClientConnectionManager();
+        ((PoolingHttpClientConnectionManager) cm).setMaxTotal(5);
+        ((PoolingHttpClientConnectionManager) cm).setDefaultMaxPerRoute(4);
+        client = HttpClients.custom().setConnectionManager(cm).build();
         writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 
@@ -96,7 +107,7 @@ public class ImageController {
 
         CacheResult cacheResult;
         try {
-            cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
+            cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo,client);
         } catch (ImageNotFoundException e) {
             logRequest(filename, props.getOriginServer(), "false", operations);
             throw e;
