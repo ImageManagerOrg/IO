@@ -95,18 +95,26 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
-        logRequest(filename, props.getOriginServer(), "null", operations);
+        // ==============
+        if (logRequests) logRequest(filename, props.getOriginServer(), "null", operations);
+        // ==============
+
         String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
 
         CacheResult cacheResult;
         try {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
         } catch (ImageNotFoundException e) {
+            // ==============
             if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
+            // ==============
             throw e;
         }
 
+        // ==============
         if(logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
+        // ==============
+
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
         return ResponseEntity.ok(cacheResult.getCacheResource());

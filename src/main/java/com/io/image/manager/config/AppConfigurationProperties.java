@@ -44,6 +44,5 @@ public class AppConfigurationProperties {
 
     public void setLogRequests(String logRequests) {
         this.logRequests = logRequests.equals("true");
-        System.out.println("PROPS" + logRequests);
     }
 }
