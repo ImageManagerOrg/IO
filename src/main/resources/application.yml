@@ -11,6 +11,8 @@ image-manager:
   disk-cache-mount-point: cache
   disk-log-mount-point: log
   url-show-mode: true
+  route-to-limit: http://localhost:5000
+  connection-limit: 5
 logging:
   level:
     org.springframework.web: DEBUG
@@ -25,6 +27,8 @@ image-manager:
   disk-cache-mount-point: cache
   disk-log-mount-point: log
   url-show-mode: true
+  route-to-limit: http://localhost:5000
+  connection-limit: 5
 ---
 spring:
   config:
@@ -35,6 +39,8 @@ image-manager:
   disk-cache-mount-point: ${CACHE_DIR}
   disk-log-mount-point: ${LOG_DIR}
   url-show-mode: true
+  route-to-limit: http://localhost:5000
+  connection-limit: 5
 ---
 management:
   healths:

@@ -1,6 +1,8 @@
 package com.io.image.manager.controller;
 
+import org.apache.http.HttpHost;
 import  org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import  org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -44,7 +46,7 @@ public class ImageController {
     private BufferedWriter writer;
     private CloseableHttpClient client;
 
-    private final HttpClientConnectionManager cm;
+    private final HttpClientConnectionManager connectionManager;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
@@ -60,10 +62,11 @@ public class ImageController {
         if (!Files.exists(logPath)) {
             Files.createDirectory(logPath);
         }
-        cm = new PoolingHttpClientConnectionManager();
-        ((PoolingHttpClientConnectionManager) cm).setMaxTotal(5);
-        ((PoolingHttpClientConnectionManager) cm).setDefaultMaxPerRoute(4);
-        client = HttpClients.custom().setConnectionManager(cm).build();
+        connectionManager = new PoolingHttpClientConnectionManager();
+        ((PoolingHttpClientConnectionManager) connectionManager).setMaxTotal(20);
+        ((PoolingHttpClientConnectionManager) connectionManager).setDefaultMaxPerRoute(5);
+        ((PoolingHttpClientConnectionManager) connectionManager).setMaxPerRoute(new HttpRoute(HttpHost.create(props.getRouteToLimit())), props.getConnectionLimit());
+        client = HttpClients.custom().setConnectionManager(connectionManager).build();
         writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 

@@ -10,6 +10,8 @@ public class AppConfigurationProperties {
     private String diskCacheMountPoint;
     private String diskLogMountPoint;
     private boolean urlShowMode;
+    private String routeToLimit;
+    private int connectionLimit;
 
     public String getOriginServer() {
         return originServer;
@@ -38,4 +40,12 @@ public class AppConfigurationProperties {
     public void setUrlShowMode(boolean urlShowMode) {
         this.urlShowMode = urlShowMode;
     }
+
+    public String getRouteToLimit() { return routeToLimit; }
+
+    public void setRouteToLimit(String routeToLimit) { this.routeToLimit = routeToLimit; }
+
+    public int getConnectionLimit() { return connectionLimit; }
+
+    public void setConnectionLimit(int connectionLimit) { this.connectionLimit = connectionLimit; }
 }
