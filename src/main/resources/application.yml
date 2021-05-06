@@ -10,7 +10,7 @@ image-manager:
   origin-server: http://localhost:5000/
   disk-cache-mount-point: cache
   disk-log-mount-point: /data/log
-  log-requests: ${LOG_REQUESTS}
+  log-requests: false
   url-show-mode: true
 logging:
   level:
@@ -29,6 +29,7 @@ image-manager:
   url-show-mode: true
 ---
 spring:
+  config:
     activate:
       on-profile: prod
 image-manager:
