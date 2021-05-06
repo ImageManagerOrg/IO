@@ -7,4 +7,4 @@ FROM openjdk:15
 EXPOSE 8080
 RUN mkdir /app
 COPY --from=build /workspace/build/libs/*.jar /app/spring-boot-application.jar
-ENTRYPOINT ["java", "-jar","/app/spring-boot-application.jar"]
+ENTRYPOINT java -jar $JAVA_ARG /app/spring-boot-application.jar

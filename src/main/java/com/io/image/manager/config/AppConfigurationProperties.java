@@ -12,6 +12,7 @@ public class AppConfigurationProperties {
     private boolean urlShowMode;
     private String routeToLimit;
     private int connectionLimit;
+    private boolean logRequests;
 
     public String getOriginServer() {
         return originServer;
@@ -48,4 +49,10 @@ public class AppConfigurationProperties {
     public int getConnectionLimit() { return connectionLimit; }
 
     public void setConnectionLimit(int connectionLimit) { this.connectionLimit = connectionLimit; }
+
+    public boolean getLogRequests() {return logRequests; }
+
+    public void setLogRequests(String logRequests) {
+        this.logRequests = logRequests.equals("true");
+    }
 }
