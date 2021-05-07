@@ -7,6 +7,39 @@ volumes:
   app_data: {}
 
 services:
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/dev-prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - 9090:9090
+    networks:
+      - grafana
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - grafana
+
+  grafana:
+    image: grafana/grafana:7.3.6
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards/:/etc/dashboards/
+    ports:
+      - 3000:3000
+    networks:
+      - grafana
 
   app:
     build: .
@@ -41,7 +74,7 @@ services:
 
   origin:
     build: ./origin_server
-    ports: 
+    ports:
       - 5000:5000
     networks:
       - grafana
@@ -51,5 +84,3 @@ services:
       - FLASK_APP=main.py
     volumes:
       - ./images/:/data/images/
-
-

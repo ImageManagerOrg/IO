@@ -118,7 +118,6 @@ public class ImageServiceImpl implements ImageService {
                     if (response.getHeaders("ETag") != null) {
                         eTag = Optional.of(response.getHeaders("ETag").toString());
                     }
-                    //byte[] imgBytes = conn.getInputStream().readAllBytes();
                     byte[] imgBytes = is.readAllBytes();
                     is.close();
                     BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));

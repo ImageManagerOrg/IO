@@ -42,8 +42,8 @@ image-manager:
   disk-log-mount-point: ${LOG_DIR}
   log-requests: ${LOG_REQUESTS}
   url-show-mode: true
-  route-to-limit: http://localhost:5000
-  connection-limit: 5
+  route-to-limit: ${ORIGIN_ROUTE}
+  connection-limit: ${ROUTE_LIMIT}
 ---
 management:
   healths:
