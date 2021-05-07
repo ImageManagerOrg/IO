@@ -12,8 +12,8 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ./home/ubuntu/secrets/nginx_certs:/data/nginx/certs
-      - ./home/ubuntu/deployment/router:/etc/nginx/conf.d
+      - ./nginx_certs:/data/nginx/certs
+      - ./router:/etc/nginx/conf.d
     ports:
       - "80:80"
       - "443:443"
@@ -70,7 +70,7 @@ services:
       - /mnt/image-cache-part/cache:/data/cache
       - /mnt/log:/data/log
     ports:
-      - 8888:8080
+      - 8080:8080
     networks:
       - grafana
   autoheal:
