@@ -59,7 +59,7 @@ jobs:
         username: ubuntu 
         port: 22 
         key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-        source: "prometheus.yml,prod-docker-compose.yml,scripts/deploy.sh"
+        source: "prometheus.yml,prod-docker-compose.yml,scripts/*,router/*"
         target: "deployment"
         
     - name: Start docker-compose
@@ -71,5 +71,5 @@ jobs:
         port: 22 
         script: |
           cd deployment
-          chmod +x scripts/deploy.sh
+          chmod +x scripts/*
           ./scripts/deploy.sh
