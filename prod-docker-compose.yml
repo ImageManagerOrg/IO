@@ -14,9 +14,6 @@ services:
     volumes:
       - ./nginx_certs:/data/nginx/certs
       - ./router:/etc/nginx/conf.d
-    ports:
-      - "80:80"
-      - "443:443"
 
   prometheus:
     image: prom/prometheus:v2.21.0
