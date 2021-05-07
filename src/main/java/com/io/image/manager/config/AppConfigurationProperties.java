@@ -1,6 +1,9 @@
 package com.io.image.manager.config;
 
+import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
+import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -44,5 +47,10 @@ public class AppConfigurationProperties {
 
     public void setLogRequests(String logRequests) {
         this.logRequests = logRequests.equals("true");
+    }
+
+    @Bean
+    HttpTraceRepository getHttpTraceRepository() {
+        return new InMemoryHttpTraceRepository();
     }
 }
