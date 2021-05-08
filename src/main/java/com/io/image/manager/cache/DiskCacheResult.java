@@ -27,6 +27,6 @@ public class DiskCacheResult implements CacheResult {
 
     @Override
     public String resultHash() {
-        return this.resultHash();
+        return this.resultHash;
     }
 }

@@ -13,7 +13,7 @@ class CacheRecordRepositoryTest {
     private CacheRecordRepository repository;
 
     private CacheRecord defaultCacheRecord() {
-        return new CacheRecord("origin", 1, "hash", "etag", 1000L);
+        return new CacheRecord("origin", "1.jpg", "hash", "etag", 1000L);
     }
 
     @Test
@@ -29,11 +29,21 @@ class CacheRecordRepositoryTest {
 
         repository.incrementImageHit(result.getOrigin(), result.getNameHash());
 
-        System.out.println(repository.findByOriginAndNameHash(result.getOrigin(), result.getNameHash()));
         result = repository.findById(result.getId()).get();
-        System.out.println(result);
 
         assertEquals(2, result.getHits());
+    }
+
+    @Test
+    public void updatedTTL() {
+        var result = repository.save(defaultCacheRecord());
+        assertEquals(result.getTtl(), 1000L);
+
+        repository.updateTTL(result.getOrigin(), result.getNameHash(), 999L);
+        var newResult = repository.findById(result.getId()).get();
+
+        assertEquals(newResult.getTtl(), 999L);
+        assert(newResult.getRemoteFetch().isAfter(result.getRemoteFetch()));
     }
 
 }

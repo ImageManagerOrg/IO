@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.rmi.Remote;
@@ -35,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class ImageServiceImpl implements ImageService {
@@ -43,6 +45,7 @@ public class ImageServiceImpl implements ImageService {
     private final ImageCache cache;
     private final Counter missCounter;
     private final DistributionSummary originTrafficSummary;
+    private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
 
     public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr) {
         this.props = props;
@@ -65,7 +68,11 @@ public class ImageServiceImpl implements ImageService {
         // check if image from given origin and with particular operations is already in cache
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
         if (cacheResult.isPresent()) {
-            repository.incrementImageHit(origin.getUrl(), cacheResult.get().resultHash());
+            try {
+                repository.incrementImageHit(origin.getHost(), cacheResult.get().resultHash());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             return cacheResult.get();
         }
 
@@ -147,14 +154,6 @@ public class ImageServiceImpl implements ImageService {
         return ImageIO.read(is);
     }
 
-    private int getImageId(String filename) {
-        String withoutExtension = filename;
-        if (withoutExtension.contains(".")) {
-            withoutExtension = withoutExtension.substring(0, withoutExtension.indexOf("."));
-        }
-        return Integer.parseInt(withoutExtension);
-    }
-
     private Optional<CacheResult> fetchRemoteProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
         var remoteFetchResult = fetchRemoteImage(origin, filename);
 
@@ -171,9 +170,15 @@ public class ImageServiceImpl implements ImageService {
             var storeResult = cache.storeImage(origin, image, filename, operations, info);
 
             try {
-                // FIXME: add ttl parsing
-                repository.save(new CacheRecord(origin.getUrl(), getImageId(filename), storeResult.resultHash(), remoteFetchResult.etag.orElse(""), 0L));
+                var maxAge = maxAgePattern.matcher(remoteFetchResult.cacheControl.orElse("max-age=0"));
+                long ttl = 0L;
+                if (maxAge.find()) {
+                    ttl = Long.parseLong(maxAge.group(1));
+                }
+
+                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), remoteFetchResult.etag.orElse(""), ttl));
             } catch (Exception e) {
+                e.printStackTrace();
                 // pass if broken
             }
 
@@ -190,16 +195,26 @@ public class ImageServiceImpl implements ImageService {
         }
 
         var image = foundImage.get();
-
         image = processImage(image, operations, info);
-
         var result = cache.storeImage(origin, image, filename, operations, info);
 
-        var entry = repository.findByOriginAndNameHash(origin.getUrl(), result.resultHash());
-        if (entry.isPresent()) {
-            // FIXME: add ttl parsing
-            repository.save(new CacheRecord(origin.getUrl(), getImageId(filename), result.resultHash(), entry.get().getEtag(), 0L));
+        var originalRecord = repository
+                .findByOriginAndNameHash(
+                        origin.getHost(),
+                        cache.cacheHash(
+                                origin,
+                                filename,
+                                Collections.emptyList(),
+                                ImageOperationParser.getDefaultConversionInfo(info.getFormat()))
+                );
+
+        if (originalRecord.isPresent()) {
+            repository.save(originalRecord.get().cloneWithNewHash(result.resultHash()));
+        } else {
+            // this should not happen but just in case save it in database
+            repository.save(new CacheRecord(origin.getHost(), filename, result.resultHash(), "", 0L));
         }
+
         return Optional.of(result);
     }
 

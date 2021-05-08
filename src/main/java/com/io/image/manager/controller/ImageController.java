@@ -92,7 +92,6 @@ public class ImageController {
             }
             logger.info(url);
         }
-//        var origin = originFromHost(host);
         var origin = new OriginServer(props.getOriginServer());
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
@@ -121,10 +120,6 @@ public class ImageController {
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
         return ResponseEntity.ok(cacheResult.getCacheResource());
-    }
-
-    private OriginServer originFromHost(String host) {
-        return new OriginServer(String.format("https://%s/", host));
     }
 
     private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){

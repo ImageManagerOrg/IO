@@ -53,7 +53,7 @@ public class DiskImageCache implements ImageCache {
             return Optional.empty();
         }
 
-        return Optional.of(new DiskCacheResult(path.get(),  imageHash(filename, operations, info)));
+        return Optional.of(new DiskCacheResult(path.get(),  cacheHash(origin, filename, operations, info)));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DiskImageCache implements ImageCache {
         // TODO: change jpg hardcoded format to take it from filename extension
         ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
 
-        return new DiskCacheResult(path.get(),  imageHash(filename, operations, info));
+        return new DiskCacheResult(path.get(),  cacheHash(origin, filename, operations, info));
     }
 
     @Override
@@ -107,7 +107,8 @@ public class DiskImageCache implements ImageCache {
 
         Note that different order of given operations will result in completely different image hash.
      */
-    private String imageHash(String filename, List<ImageOperation> operations, ConversionInfo info) {
+    @Override
+    public String cacheHash(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) {
         StringBuffer buffer = new StringBuffer();
         buffer.append(filename);
 
@@ -143,7 +144,7 @@ public class DiskImageCache implements ImageCache {
         if (originDir.isEmpty()) return Optional.empty();
 
         var withoutExtension = filename.substring(0, filename.lastIndexOf('.'));
-        var hash = imageHash(filename, operations, info);
+        var hash = cacheHash(origin, filename, operations, info);
 
         return Optional.of(Path.of(originDir.get().toString(), withoutExtension, hash));
     }
