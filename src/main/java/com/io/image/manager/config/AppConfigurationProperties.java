@@ -1,6 +1,9 @@
 package com.io.image.manager.config;
 
+import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
+import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -10,6 +13,7 @@ public class AppConfigurationProperties {
     private String diskCacheMountPoint;
     private String diskLogMountPoint;
     private boolean urlShowMode;
+    private boolean logRequests;
 
     public String getOriginServer() {
         return originServer;
@@ -37,5 +41,16 @@ public class AppConfigurationProperties {
 
     public void setUrlShowMode(boolean urlShowMode) {
         this.urlShowMode = urlShowMode;
+    }
+
+    public boolean getLogRequests() {return logRequests; }
+
+    public void setLogRequests(String logRequests) {
+        this.logRequests = logRequests.equals("true");
+    }
+
+    @Bean
+    HttpTraceRepository getHttpTraceRepository() {
+        return new InMemoryHttpTraceRepository();
     }
 }

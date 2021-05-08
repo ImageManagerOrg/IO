@@ -7,6 +7,14 @@ volumes:
   app_data: {}
 
 services:
+  nginx:
+    image: nginx:1.19-alpine
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nginx_certs:/data/nginx/certs
+      - ./router:/etc/nginx/conf.d
+
   prometheus:
     image: prom/prometheus:v2.21.0
     volumes:
@@ -48,6 +56,8 @@ services:
       - CACHE_DIR=/data/cache
       - LOG_DIR=/data/log
       - ORIGIN=http://origin/
+      - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+      - LOG_REQUESTS=false
     extra_hosts:
       # change it so private IPs are not hard coded
       - "origin:10.0.156.95"
@@ -57,7 +67,7 @@ services:
       - /mnt/image-cache-part/cache:/data/cache
       - /mnt/log:/data/log
     ports:
-      - 80:8080
+      - 8080:8080
     networks:
       - grafana
   autoheal:

@@ -38,7 +38,7 @@ public class ImageController {
     private final CacheRecordRepository cacheRepository;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
-    private final String logDir;
+    private final boolean logRequests;
     private BufferedWriter writer;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
@@ -51,12 +51,16 @@ public class ImageController {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.props = props;
-        logDir = props.getDiskLogMountPoint();
-        Path logPath = Paths.get(logDir);
-        if (!Files.exists(logPath)) {
-            Files.createDirectory(logPath);
+        this.logRequests = props.getLogRequests();
+
+        if (this.logRequests) {
+            String logDir = props.getDiskLogMountPoint();
+            Path logPath = Paths.get(logDir);
+            if (!Files.exists(logPath)) {
+                Files.createDirectory(logPath);
+            }
+            writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
         }
-        writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
     }
 
     /**
@@ -94,18 +98,26 @@ public class ImageController {
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
 
-        logRequest(filename, props.getOriginServer(), "null", operations);
+        // ==============
+        if (logRequests) logRequest(filename, props.getOriginServer(), "null", operations);
+        // ==============
+
         String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
 
         CacheResult cacheResult;
         try {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
         } catch (ImageNotFoundException e) {
-            logRequest(filename, props.getOriginServer(), "false", operations);
+            // ==============
+            if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
+            // ==============
             throw e;
         }
 
-        logRequest(filename, props.getOriginServer(), "true", operations);
+        // ==============
+        if(logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
+        // ==============
+
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
         return ResponseEntity.ok(cacheResult.getCacheResource());

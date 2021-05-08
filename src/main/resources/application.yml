@@ -9,7 +9,8 @@ spring:
 image-manager:
   origin-server: http://localhost:5000/
   disk-cache-mount-point: cache
-  disk-log-mount-point: log
+  disk-log-mount-point: /data/log
+  log-requests: false
   url-show-mode: true
 logging:
   level:
@@ -30,7 +31,8 @@ spring:
 image-manager:
   origin-server: http://localhost:5000/
   disk-cache-mount-point: cache
-  disk-log-mount-point: log
+  disk-log-mount-point: /data/log
+  log-requests: true
   url-show-mode: true
 ---
 spring:
@@ -41,6 +43,7 @@ image-manager:
   origin-server: ${ORIGIN}
   disk-cache-mount-point: ${CACHE_DIR}
   disk-log-mount-point: ${LOG_DIR}
+  log-requests: ${LOG_REQUESTS}
   url-show-mode: true
 ---
 management:
