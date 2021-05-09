@@ -33,13 +33,10 @@ public class ScaleOperation extends ImageOperation {
         if (widthValue == null) {
             newHeight = Integer.parseInt(heightValue);
             newWidth = imageWidth * newHeight / imageHeight;
-        }
-
-        else if (heightValue == null) {
+        } else if (heightValue == null) {
             newWidth = Integer.parseInt(widthValue);
             newHeight = imageHeight * newWidth / imageWidth;
-        }
-        else {
+        } else {
             newWidth = Integer.parseInt(widthValue);
             newHeight = Integer.parseInt(heightValue);
         }
@@ -51,7 +48,7 @@ public class ScaleOperation extends ImageOperation {
             throw new ImageOperationException("Target width or height is negative");
         }
 
-        if ( newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)) {
+        if (newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)) {
             throw new ImageOperationException("Target width or height is larger than 2^16");
         }
     }

@@ -6,6 +6,7 @@ import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
+import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @RestController
 public class ImageController {
     private final ImageService imageService;
+    private final CacheRecordRepository cacheRepository;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
     private final boolean logRequests;
@@ -41,8 +43,9 @@ public class ImageController {
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
+    public ImageController(ImageService imageService, CacheRecordRepository cacheRepository, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
         this.imageService = imageService;
+        this.cacheRepository = cacheRepository;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
@@ -89,8 +92,9 @@ public class ImageController {
             }
             logger.info(url);
         }
-//        var origin = originFromHost(host);
         var origin = new OriginServer(props.getOriginServer());
+        // uncomment when requests start to include origin header
+        // var origin = originFromHost(host);
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
@@ -106,13 +110,13 @@ public class ImageController {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
         } catch (ImageNotFoundException e) {
             // ==============
-            if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
+            if (logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
             // ==============
             throw e;
         }
 
         // ==============
-        if(logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
+        if (logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
         // ==============
 
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
@@ -120,11 +124,7 @@ public class ImageController {
         return ResponseEntity.ok(cacheResult.getCacheResource());
     }
 
-    private OriginServer originFromHost(String host) {
-        return new OriginServer(String.format("https://%s/", host));
-    }
-
-    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
+    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations) {
         try {
             String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
             String opArgs = operations.stream().map(ImageOperation -> ImageOperation
@@ -134,7 +134,7 @@ public class ImageController {
 
             String[] values = {timestamp, origin, filename, isPresent, opNames};
 
-            for (String val: values) {
+            for (String val : values) {
                 writer.append(val);
                 writer.append("`");
             }
@@ -144,6 +144,9 @@ public class ImageController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    private OriginServer originFromHost(String host) {
+        return new OriginServer(String.format("https://%s/", host));
     }
 }

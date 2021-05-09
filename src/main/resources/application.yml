@@ -3,6 +3,15 @@ spring:
     active: dev
 ---
 spring:
+  datasource:
+    url: jdbc:h2:file:./cache/devdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
   config:
     activate:
       on-profile: dev
@@ -12,12 +21,21 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: false
   url-show-mode: true
+  cache-storage-limit: 100000000
+  cache-storage-limit-alert: 90
 logging:
   level:
     org.springframework.web: DEBUG
     web: DEBUG
 ---
 spring:
+  datasource:
+    url: jdbc:h2:file:./testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
   config:
     activate:
       on-profile: test
@@ -27,17 +45,30 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: true
   url-show-mode: true
+  cache-storage-limit: 1000000000
+  cache-storage-limit-alert: 80
 ---
 spring:
   config:
     activate:
       on-profile: prod
+  datasource:
+    url: jdbc:h2:file:${CACHE_DIR}/db
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
 image-manager:
   origin-server: ${ORIGIN}
   disk-cache-mount-point: ${CACHE_DIR}
   disk-log-mount-point: ${LOG_DIR}
   log-requests: ${LOG_REQUESTS}
   url-show-mode: true
+  cache-storage-limit: ${CACHE_STORAGE_LIMIT}
+  cache-storage-limit-alert: ${CACHE_STORAGE_LIMIT_ALERT}
 ---
 management:
   healths:
@@ -62,3 +93,4 @@ management:
         # prometheus looks at /metrics by default when scraping for metrics
         metrics: spring-metrics
         prometheus: metrics
+

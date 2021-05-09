@@ -6,6 +6,9 @@ import org.springframework.core.io.InputStreamResource;
 import java.io.IOException;
 
 public interface CacheResult {
-     AbstractResource getCacheResource();
-     long totalResourceSizeInBytes() throws IOException;
+    AbstractResource getCacheResource();
+
+    long totalResourceSizeInBytes() throws IOException;
+
+    String resultHash();
 }

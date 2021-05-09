@@ -8,14 +8,14 @@ import java.awt.image.BufferedImage;
 import java.util.Map;
 
 @Slf4j
-public class WatermarkOperation extends ImageOperation{
+public class WatermarkOperation extends ImageOperation {
 
 
     public WatermarkOperation(String name, Map<String, String> arguments) {
         super(name, arguments);
     }
 
-    public BufferedImage run(BufferedImage image){
+    public BufferedImage run(BufferedImage image) {
         Graphics graphics = image.getGraphics();
         graphics.setFont(new Font("Arial", Font.BOLD, 30));
         String watermark = "AGH Copyright @2021";
