@@ -58,6 +58,10 @@ services:
       - ORIGIN=http://origin/
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
       - LOG_REQUESTS=false
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
     extra_hosts:
       # change it so private IPs are not hard coded
       - "origin:10.0.156.95"
