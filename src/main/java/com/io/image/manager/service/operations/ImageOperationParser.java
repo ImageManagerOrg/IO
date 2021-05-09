@@ -7,7 +7,7 @@ import java.util.*;
 
 public class ImageOperationParser {
 
-    public static ConversionInfo parseConversion(String filename, String query)throws ConversionException {
+    public static ConversionInfo parseConversion(String filename, String query) throws ConversionException {
 
         String fileExtension = filename.split("\\.")[1];
 
@@ -88,8 +88,7 @@ public class ImageOperationParser {
             if (params.get(0).matches("w=true")) {
                 isWatermark = true;
                 params.remove(0);
-            }
-            else if (params.get(0).matches("w=false")) {
+            } else if (params.get(0).matches("w=false")) {
                 params.remove(0);
             }
         }

@@ -107,13 +107,13 @@ public class ImageServiceImpl implements ImageService {
             var headers = conn.getHeaderFields();
 
             Optional<String> cacheControl = Optional.empty();
-            if(headers.containsKey("Cache-Control")) {
+            if (headers.containsKey("Cache-Control")) {
                 cacheControl = headers.get("Cache-Control").stream().findFirst();
             }
 
             Optional<String> etag = Optional.empty();
-            if(headers.containsKey("ETag")) {
-                 etag = headers.get("ETag").stream().findFirst();
+            if (headers.containsKey("ETag")) {
+                etag = headers.get("ETag").stream().findFirst();
             }
 
             byte[] imgBytes = conn.getInputStream().readAllBytes();
@@ -187,7 +187,7 @@ public class ImageServiceImpl implements ImageService {
         return Optional.empty();
     }
 
-    private Optional<CacheResult> fetchLocalProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info)  throws ConversionException, IOException, ImageOperationException {
+    private Optional<CacheResult> fetchLocalProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
         var foundImage = cache.loadImage(origin, filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
 
         if (foundImage.isEmpty()) {

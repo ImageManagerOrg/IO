@@ -31,9 +31,13 @@ public class AppConfigurationProperties {
         this.diskCacheMountPoint = diskCacheMountPoint;
     }
 
-    public String getDiskLogMountPoint() { return diskLogMountPoint; }
+    public String getDiskLogMountPoint() {
+        return diskLogMountPoint;
+    }
 
-    public void setDiskLogMountPoint(String diskLogMountPoint) { this.diskLogMountPoint = diskLogMountPoint; }
+    public void setDiskLogMountPoint(String diskLogMountPoint) {
+        this.diskLogMountPoint = diskLogMountPoint;
+    }
 
     public boolean isUrlShowMode() {
         return urlShowMode;
@@ -43,7 +47,9 @@ public class AppConfigurationProperties {
         this.urlShowMode = urlShowMode;
     }
 
-    public boolean getLogRequests() {return logRequests; }
+    public boolean getLogRequests() {
+        return logRequests;
+    }
 
     public void setLogRequests(String logRequests) {
         this.logRequests = logRequests.equals("true");

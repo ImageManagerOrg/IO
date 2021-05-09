@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 
 @Entity
 public class CacheRecord {
-    protected CacheRecord() {}
+    protected CacheRecord() {
+    }
 
     public CacheRecord(String origin, String imageFilename, String nameHash, String etag, Long ttl) {
         var imageId = Integer.parseInt(imageFilename.substring(0, imageFilename.lastIndexOf(".")));
@@ -36,7 +37,7 @@ public class CacheRecord {
     }
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Getter
     @Setter
     private Long id;
