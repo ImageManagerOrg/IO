@@ -160,8 +160,15 @@ public class ImageServiceImpl implements ImageService {
         if (remoteFetchResult.image.isPresent()) {
             missCounter.increment();
 
+            var maxAge = maxAgePattern.matcher(remoteFetchResult.cacheControl.orElse("max-age=0"));
+            long ttl = 0L;
+            if (maxAge.find()) {
+                ttl = Long.parseLong(maxAge.group(1));
+            }
+
             // cache image without operations and conversion for an optimization
-            cache.storeImage(origin, remoteFetchResult.image.get(), filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+            var originalCacheResult = cache.storeImage(origin, remoteFetchResult.image.get(), filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+            repository.save(new CacheRecord(origin.getHost(), filename, originalCacheResult.resultHash(), originalCacheResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
 
             // process image
             var image = processImage(remoteFetchResult.image.get(), operations, info);
@@ -169,17 +176,8 @@ public class ImageServiceImpl implements ImageService {
             // store image
             var storeResult = cache.storeImage(origin, image, filename, operations, info);
 
-            try {
-                var maxAge = maxAgePattern.matcher(remoteFetchResult.cacheControl.orElse("max-age=0"));
-                long ttl = 0L;
-                if (maxAge.find()) {
-                    ttl = Long.parseLong(maxAge.group(1));
-                }
-
-                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), remoteFetchResult.etag.orElse(""), ttl));
-            } catch (Exception e) {
-                e.printStackTrace();
-                // pass if broken
+            if (!storeResult.resultHash().equals(originalCacheResult.resultHash())) {
+                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), storeResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
             }
 
             return Optional.of(storeResult);
@@ -198,21 +196,19 @@ public class ImageServiceImpl implements ImageService {
         image = processImage(image, operations, info);
         var result = cache.storeImage(origin, image, filename, operations, info);
 
-        var originalRecord = repository
-                .findByOriginAndNameHash(
-                        origin.getHost(),
-                        cache.cacheHash(
-                                origin,
-                                filename,
-                                Collections.emptyList(),
-                                ImageOperationParser.getDefaultConversionInfo(info.getFormat()))
-                );
+        var originalHash = cache.cacheHash(
+                origin,
+                filename,
+                Collections.emptyList(),
+                ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+
+        var originalRecord = repository .findByOriginAndNameHash( origin.getHost(), originalHash);
 
         if (originalRecord.isPresent()) {
-            repository.save(originalRecord.get().cloneWithNewHash(result.resultHash()));
+            repository.save(originalRecord.get().cloneWithNewHash(result.resultHash(), result.totalResourceSizeInBytes()));
         } else {
             // this should not happen but just in case save it in database
-            repository.save(new CacheRecord(origin.getHost(), filename, result.resultHash(), "", 0L));
+            repository.save(new CacheRecord(origin.getHost(), filename, result.resultHash(), result.totalResourceSizeInBytes(), "", 0L));
         }
 
         return Optional.of(result);
@@ -223,6 +219,5 @@ public class ImageServiceImpl implements ImageService {
             image = op.run(image);
         }
         return compressImage(image, info);
-
     }
 }

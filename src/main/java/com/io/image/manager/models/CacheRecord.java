@@ -13,22 +13,24 @@ public class CacheRecord {
     protected CacheRecord() {
     }
 
-    public CacheRecord(String origin, String imageFilename, String nameHash, String etag, Long ttl) {
+    public CacheRecord(String origin, String imageFilename, String nameHash, Long sizeInBytes,  String etag, Long ttl) {
         var imageId = Integer.parseInt(imageFilename.substring(0, imageFilename.lastIndexOf(".")));
         this.origin = origin;
         this.imageId = imageId;
         this.nameHash = nameHash;
+        this.sizeInBytes = sizeInBytes;
         this.etag = etag;
         this.ttl = ttl;
         this.hits = 1;
         this.remoteFetch = LocalDateTime.now();
     }
 
-    public CacheRecord cloneWithNewHash(String nameHash) {
+    public CacheRecord cloneWithNewHash(String nameHash, Long sizeInBytes) {
         var newRecord = new CacheRecord();
         newRecord.origin = this.origin;
         newRecord.imageId = this.imageId;
         newRecord.nameHash = nameHash;
+        newRecord.sizeInBytes = sizeInBytes;
         newRecord.etag = this.etag;
         newRecord.ttl = this.ttl;
         newRecord.hits = 1;
@@ -53,6 +55,10 @@ public class CacheRecord {
     @Getter
     @Setter
     private String nameHash;
+
+    @Getter
+    @Setter
+    private Long sizeInBytes;
 
     @Getter
     @Setter
