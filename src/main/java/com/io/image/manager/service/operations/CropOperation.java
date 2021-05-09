@@ -37,15 +37,15 @@ public class CropOperation extends ImageOperation {
             throw new ImageOperationException("Origin point is outside of the original image bounds");
         }
 
-        if (startXPoint + newWidth > imageWidth || startYPoint + newHeight > imageHeight){
+        if (startXPoint + newWidth > imageWidth || startYPoint + newHeight > imageHeight) {
             throw new ImageOperationException("Origin point moved by a vector ('w', 'h') is outside of the original image bounds");
         }
 
-        if (newWidth < 0 || newHeight < 0){
+        if (newWidth < 0 || newHeight < 0) {
             throw new ImageOperationException("Target width or height is negative");
         }
 
-        if (newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)){
+        if (newWidth > Math.pow(2, 16) || newHeight > Math.pow(2, 16)) {
             throw new ImageOperationException("Target width or height is larger than 2^16");
         }
     }

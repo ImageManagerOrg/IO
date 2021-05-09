@@ -93,6 +93,8 @@ public class ImageController {
             logger.info(url);
         }
         var origin = new OriginServer(props.getOriginServer());
+        // uncomment when requests start to include origin header
+        // var origin = originFromHost(host);
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
@@ -108,13 +110,13 @@ public class ImageController {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
         } catch (ImageNotFoundException e) {
             // ==============
-            if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
+            if (logRequests) logRequest(filename, props.getOriginServer(), "false", operations);
             // ==============
             throw e;
         }
 
         // ==============
-        if(logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
+        if (logRequests) logRequest(filename, props.getOriginServer(), "true", operations);
         // ==============
 
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
@@ -122,7 +124,7 @@ public class ImageController {
         return ResponseEntity.ok(cacheResult.getCacheResource());
     }
 
-    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations){
+    private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations) {
         try {
             String opNames = operations.stream().map(ImageOperation::getName).collect(Collectors.joining("|"));
             String opArgs = operations.stream().map(ImageOperation -> ImageOperation
@@ -132,7 +134,7 @@ public class ImageController {
 
             String[] values = {timestamp, origin, filename, isPresent, opNames};
 
-            for (String val: values) {
+            for (String val : values) {
                 writer.append(val);
                 writer.append("`");
             }
@@ -142,6 +144,9 @@ public class ImageController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    private OriginServer originFromHost(String host) {
+        return new OriginServer(String.format("https://%s/", host));
     }
 }

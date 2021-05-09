@@ -36,7 +36,7 @@ public class DiskImageCache implements ImageCache {
             return Optional.empty();
         }
 
-        var path = ((DiskCacheResult)cacheResult.get()).getImageDestination();
+        var path = ((DiskCacheResult) cacheResult.get()).getImageDestination();
         BufferedImage bufferedImage = ImageIO.read(Files.newInputStream(path));
         return Optional.of(bufferedImage);
     }
@@ -53,7 +53,7 @@ public class DiskImageCache implements ImageCache {
             return Optional.empty();
         }
 
-        return Optional.of(new DiskCacheResult(path.get(),  cacheHash(origin, filename, operations, info)));
+        return Optional.of(new DiskCacheResult(path.get(), cacheHash(origin, filename, operations, info)));
     }
 
     @Override
@@ -64,14 +64,14 @@ public class DiskImageCache implements ImageCache {
         }
 
         Path parentDir = path.get().getParent();
-        if (!Files.exists(parentDir)){
+        if (!Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
         }
 
         // TODO: change jpg hardcoded format to take it from filename extension
         ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
 
-        return new DiskCacheResult(path.get(),  cacheHash(origin, filename, operations, info));
+        return new DiskCacheResult(path.get(), cacheHash(origin, filename, operations, info));
     }
 
     @Override
@@ -112,7 +112,7 @@ public class DiskImageCache implements ImageCache {
         StringBuffer buffer = new StringBuffer();
         buffer.append(filename);
 
-        for (var operation: operations) {
+        for (var operation : operations) {
             buffer.append(operation.getName());
 
             operation

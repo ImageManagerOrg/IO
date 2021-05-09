@@ -18,30 +18,39 @@ class CacheRecordRepositoryTest {
 
     @Test
     public void insertsCacheRecord() {
+        // given
         var result = repository.save(defaultCacheRecord());
+
+        // when
+
+        // then
         assertNotNull(repository.findById(result.getId()));
     }
 
     @Test
     public void incrementsCacheRecordHit() {
+        // given
         var result = repository.save(defaultCacheRecord());
+
+        // when
         assertEquals(result.getHits(), 1);
-
         repository.incrementImageHit(result.getOrigin(), result.getNameHash());
-
         result = repository.findById(result.getId()).get();
 
+        //then
         assertEquals(2, result.getHits());
     }
 
     @Test
     public void updatedTTL() {
+        // given
         var result = repository.save(defaultCacheRecord());
-        assertEquals(result.getTtl(), 1000L);
 
+        // when
         repository.updateTTL(result.getOrigin(), result.getNameHash(), 999L);
         var newResult = repository.findById(result.getId()).get();
 
+        // then
         assertEquals(newResult.getTtl(), 999L);
         assert(newResult.getRemoteFetch().isAfter(result.getRemoteFetch()));
     }
