@@ -78,9 +78,6 @@ public class AppConfigurationProperties {
     public void setConnectionLimits(String connectionLimit) { this.connectionLimits = connectionLimit; }
 
     public boolean getLogRequests() {return logRequests; }
-    public boolean getLogRequests() {
-        return logRequests;
-    }
 
     public void setLogRequests(String logRequests) {
         this.logRequests = logRequests.equals("true");

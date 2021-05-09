@@ -48,7 +48,7 @@ public class ImageServiceImpl implements ImageService {
     private final ConnectionService connectionService;
     private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
   
-    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
+    public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.props = props;
         this.repository = repository;
         this.cache = cache;
@@ -98,7 +98,6 @@ public class ImageServiceImpl implements ImageService {
         private final Optional<BufferedImage> image;
         private final Optional<String> cacheControl;
         private final Optional<String> etag;
-
         public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), Optional.empty(), Optional.empty());
     }
 
@@ -110,13 +109,13 @@ public class ImageServiceImpl implements ImageService {
             try {
                 HttpEntity entity = response.getEntity();
                 InputStream is = entity.getContent();
-                Optional<String> cacheHead = Optional.empty();
+                Optional<String> cacheControl = Optional.empty();
                 if (response.getHeaders("Cache-Control") != null) {
-                    cacheHead = Optional.of(response.getHeaders("Cache-Control").toString());
+                    cacheControl = Optional.of(response.getHeaders("Cache-Control").toString());
                 }
-                Optional<String> eTag = Optional.empty();
+                Optional<String> etag = Optional.empty();
                 if (response.getHeaders("ETag") != null) {
-                    eTag = Optional.of(response.getHeaders("ETag").toString());
+                    etag = Optional.of(response.getHeaders("ETag").toString());
                 }
                 byte[] imgBytes = is.readAllBytes();
                 is.close();
@@ -124,9 +123,7 @@ public class ImageServiceImpl implements ImageService {
                 if (image == null) {
                     return RemoteFetchResult.EMPTY_FETCH_RESULT;
                 }
-
                 originTrafficSummary.record(imgBytes.length);
-
                 return new RemoteFetchResult(Optional.of(image), cacheControl, etag);
             } catch (Exception e) {
                 return RemoteFetchResult.EMPTY_FETCH_RESULT;
@@ -163,7 +160,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private Optional<CacheResult> fetchRemoteProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
-        var remoteFetchResult = fetchRemoteImage(origin, filename, Co);
+        var remoteFetchResult = fetchRemoteImage(origin, filename);
 
         if (remoteFetchResult.image.isPresent()) {
             missCounter.increment();
