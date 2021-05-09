@@ -44,9 +44,6 @@ public class ImageController {
     private final AppConfigurationProperties props;
     private final boolean logRequests;
     private BufferedWriter writer;
-    private CloseableHttpClient client;
-
-    private final HttpClientConnectionManager connectionManager;
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
@@ -67,13 +64,6 @@ public class ImageController {
             }
             writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
         }
-
-        var poolManager = new PoolingHttpClientConnectionManager();
-        poolManager.setMaxTotal(20);
-        poolManager.setDefaultMaxPerRoute(5);
-        poolManager.setMaxPerRoute(new HttpRoute(HttpHost.create(props.getRouteToLimit())), props.getConnectionLimit());
-        this.connectionManager = poolManager;
-        client = HttpClients.custom().setConnectionManager(this.connectionManager).build();
 
     }
 
@@ -120,7 +110,7 @@ public class ImageController {
 
         CacheResult cacheResult;
         try {
-            cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo, client);
+            cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
         } catch (ImageNotFoundException e) {
             // ==============
             if(logRequests) logRequest(filename, props.getOriginServer(), "false", operations);

@@ -15,6 +15,6 @@ import java.util.List;
 
 
 public interface ImageService {
-    CacheResult fetchAndCacheImage(OriginServer server, String filename, List<ImageOperation> operations, ConversionInfo info, CloseableHttpClient client)
+    CacheResult fetchAndCacheImage(OriginServer server, String filename, List<ImageOperation> operations, ConversionInfo info)
             throws IOException, ImageOperationException, ImageNotFoundException, ConversionException;
 }

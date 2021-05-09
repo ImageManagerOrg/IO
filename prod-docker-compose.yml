@@ -50,8 +50,8 @@ services:
       - ORIGIN=http://origin/
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
       - LOG_REQUESTS=false
-      - ORIGIN_ROUTE=http://origin
-      - ROUTE_LIMIT=5
+      - ORIGIN_ROUTES=http://origin
+      - ROUTE_LIMITS=5
     extra_hosts:
       # change it so private IPs are not hard coded
       - "origin:10.0.156.95"

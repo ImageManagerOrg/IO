@@ -3,7 +3,6 @@ package com.io.image.manager.service;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.HttpClientConnectionManager;
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
@@ -18,8 +17,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -32,12 +29,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -46,8 +40,9 @@ public class ImageServiceImpl implements ImageService {
     private final ImageCache cache;
     private final Counter missCounter;
     private final DistributionSummary originTrafficSummary;
+    private final ConnectionService connectionService;
 
-    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr) {
+    public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.props = props;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
@@ -55,6 +50,7 @@ public class ImageServiceImpl implements ImageService {
                 .builder("origin.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
+        this.connectionService = connectionService;
     }
 
     @Override
@@ -62,8 +58,7 @@ public class ImageServiceImpl implements ImageService {
             OriginServer origin,
             String filename,
             List<ImageOperation> operations,
-            ConversionInfo info,
-            CloseableHttpClient client
+            ConversionInfo info
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
         // check if image from given origin and with particular operations is already in cache
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
@@ -78,7 +73,7 @@ public class ImageServiceImpl implements ImageService {
 
         // if no local image has been found then ask the origin server
         if (image.isEmpty()) {
-            image = fetchRemoteImage(origin, filename, client);
+            image = fetchRemoteImage(origin, filename);
 
             // found remote image, increment miss counter
             if (image.isPresent()) {
@@ -101,9 +96,10 @@ public class ImageServiceImpl implements ImageService {
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
-    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename, CloseableHttpClient client) {
+    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
             // FIXME: this does not look pretty
             try {
+                    CloseableHttpClient client = connectionService.getHttpClient();
                     HttpGet get = new HttpGet(origin.getUrl() + filename);
                     CloseableHttpResponse response = client.execute(get);
                     try{

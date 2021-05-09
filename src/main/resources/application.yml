@@ -12,8 +12,8 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: false
   url-show-mode: true
-  route-to-limit: http://localhost:5000
-  connection-limit: 5
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
 logging:
   level:
     org.springframework.web: DEBUG
@@ -29,8 +29,8 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: true
   url-show-mode: true
-  route-to-limit: http://localhost:5000
-  connection-limit: 5
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
 ---
 spring:
   config:
@@ -42,8 +42,8 @@ image-manager:
   disk-log-mount-point: ${LOG_DIR}
   log-requests: ${LOG_REQUESTS}
   url-show-mode: true
-  route-to-limit: ${ORIGIN_ROUTE}
-  connection-limit: ${ROUTE_LIMIT}
+  routes-to-limit: ${ORIGIN_ROUTES}
+  connection-limits: ${ROUTE_LIMITS}
 ---
 management:
   healths:
