@@ -1,11 +1,6 @@
 package com.io.image.manager.controller;
 
-import org.apache.http.HttpHost;
-import  org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import  org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;

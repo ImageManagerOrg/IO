@@ -13,11 +13,11 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class ConnectionServiceImpl implements ConnectionService{
+public class ConnectionServiceImpl implements ConnectionService {
     private CloseableHttpClient client;
     private HttpClientConnectionManager connectionManager;
 
-    public ConnectionServiceImpl(AppConfigurationProperties props){
+    public ConnectionServiceImpl(AppConfigurationProperties props) {
         var poolManager = new PoolingHttpClientConnectionManager();
         poolManager.setMaxTotal(20);
         poolManager.setDefaultMaxPerRoute(5);
@@ -31,7 +31,8 @@ public class ConnectionServiceImpl implements ConnectionService{
         this.client = HttpClients.custom().setConnectionManager(this.connectionManager).build();
 
     }
-    public CloseableHttpClient getHttpClient(){
+
+    public CloseableHttpClient getHttpClient() {
         return client;
     }
 }
