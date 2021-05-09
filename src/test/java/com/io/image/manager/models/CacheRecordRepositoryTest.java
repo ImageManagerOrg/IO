@@ -13,7 +13,7 @@ class CacheRecordRepositoryTest {
     private CacheRecordRepository repository;
 
     private CacheRecord defaultCacheRecord() {
-        return new CacheRecord("origin", "1.jpg", "hash", "etag", 1000L);
+        return new CacheRecord("origin", "1.jpg", "hash", 1000000L, "etag", 1000L);
     }
 
     @Test

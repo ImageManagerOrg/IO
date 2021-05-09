@@ -5,15 +5,35 @@ import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @ConfigurationProperties(prefix = "image-manager")
+@EnableScheduling
 public class AppConfigurationProperties {
     private String originServer;
     private String diskCacheMountPoint;
     private String diskLogMountPoint;
     private boolean urlShowMode;
     private boolean logRequests;
+    private long cacheStorageLimit;
+    private int cacheStorageLimitAlert;
+
+    public long getCacheStorageLimit() {
+        return cacheStorageLimit;
+    }
+
+    public int getCacheStorageLimitAlert() {
+        return cacheStorageLimitAlert;
+    }
+
+    public void setCacheStorageLimit(long cacheStorageLimit) {
+        this.cacheStorageLimit = cacheStorageLimit;
+    }
+
+    public void setCacheStorageLimitAlert(int cacheStorageLimitAlert) {
+        this.cacheStorageLimitAlert = cacheStorageLimitAlert;
+    }
 
     public String getOriginServer() {
         return originServer;

@@ -7,11 +7,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CacheRecordRepository extends CrudRepository<CacheRecord, Long> {
     Optional<CacheRecord> findByOriginAndNameHash(String origin, String nameHash);
+
+
+    @Query("select distinct origin from CacheRecord")
+    List<String> listOrigins();
 
     @Transactional
     @Modifying(clearAutomatically = true)
