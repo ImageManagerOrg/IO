@@ -7,6 +7,14 @@ volumes:
   app_data: {}
 
 services:
+  nginx:
+    image: nginx:1.19-alpine
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nginx_certs:/data/nginx/certs
+      - ./router:/etc/nginx/conf.d
+
   prometheus:
     image: prom/prometheus:v2.21.0
     volumes:
@@ -52,6 +60,10 @@ services:
       - LOG_REQUESTS=false
       - ORIGIN_ROUTES=http://origin
       - ROUTE_LIMITS=5
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
     extra_hosts:
       # change it so private IPs are not hard coded
       - "origin:10.0.156.95"
@@ -61,7 +73,8 @@ services:
       - /mnt/image-cache-part/cache:/data/cache
       - /mnt/log:/data/log
     ports:
-      - 80:8080
+      - 8080:8080
+      - 1098:1098
     networks:
       - grafana
   autoheal:

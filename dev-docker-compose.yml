@@ -63,6 +63,7 @@ services:
     restart: always
     ports:
       - 8080:8080
+      - 1098:1098
     networks:
       - grafana
 

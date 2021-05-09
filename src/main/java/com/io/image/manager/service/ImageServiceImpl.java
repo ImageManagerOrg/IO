@@ -10,6 +10,8 @@ import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.config.AppConfigurationProperties;
+import com.io.image.manager.models.CacheRecord;
+import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
@@ -17,6 +19,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.http.impl.client.CloseableHttpClient;
+import lombok.Data;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -33,17 +36,21 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class ImageServiceImpl implements ImageService {
     private final AppConfigurationProperties props;
+    private final CacheRecordRepository repository;
     private final ImageCache cache;
     private final Counter missCounter;
     private final DistributionSummary originTrafficSummary;
     private final ConnectionService connectionService;
-
+    private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
+  
     public ImageServiceImpl(AppConfigurationProperties props, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.props = props;
+        this.repository = repository;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
         originTrafficSummary = DistributionSummary
@@ -63,73 +70,71 @@ public class ImageServiceImpl implements ImageService {
         // check if image from given origin and with particular operations is already in cache
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
         if (cacheResult.isPresent()) {
+            try {
+                repository.incrementImageHit(origin.getHost(), cacheResult.get().resultHash());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             return cacheResult.get();
         }
 
-        // TODO: apply correct default conversion info
-        // image with given operations and conversion info has not been found in cache, try to find original image with default params
-        var defaultConversion = ImageOperationParser.getDefaultConversionInfo("jpg");
-        var image = cache.loadImage(origin, filename, Collections.emptyList(), defaultConversion);
+        cacheResult = fetchLocalProcessAndCache(origin, filename, operations, info);
 
-        // if no local image has been found then ask the origin server
-        if (image.isEmpty()) {
-            image = fetchRemoteImage(origin, filename);
-
-            // found remote image, increment miss counter
-            if (image.isPresent()) {
-                missCounter.increment();
-
-                // cache image without operations and conversion for an optimization
-                cache.storeImage(origin, image.get(), filename, Collections.emptyList(), defaultConversion);
-            }
+        if (cacheResult.isPresent()) {
+            return cacheResult.get();
         }
 
-        if (image.isPresent()) {
-            var img = image.get();
-            for (var op : operations) {
-                img = op.run(img);
-            }
-            img = compressImage(img, info);
-            // cache image after performing operations
-            return cache.storeImage(origin, img, filename, operations, info);
+        cacheResult = fetchRemoteProcessAndCache(origin, filename, operations, info);
+        if (cacheResult.isPresent()) {
+            return cacheResult.get();
         }
+
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
-    private Optional<BufferedImage> fetchRemoteImage(OriginServer origin, String filename) {
-            // FIXME: this does not look pretty
-            try {
-                    CloseableHttpClient client = connectionService.getHttpClient();
-                    HttpGet get = new HttpGet(origin.getUrl() + filename);
-                    CloseableHttpResponse response = client.execute(get);
-                    try{
-                    HttpEntity entity = response.getEntity();
-                    InputStream is = entity.getContent();
 
-                    Optional<String> cacheHead = Optional.empty();
-                    if (response.getHeaders("Cache-Control") != null) {
-                        cacheHead = Optional.of(response.getHeaders("Cache-Control").toString());
-                    }
-                    Optional<String> eTag = Optional.empty();
-                    if (response.getHeaders("ETag") != null) {
-                        eTag = Optional.of(response.getHeaders("ETag").toString());
-                    }
-                    byte[] imgBytes = is.readAllBytes();
-                    is.close();
-                    BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
-                    if (image == null) {
-                        return Optional.empty();
-                    } else {
-                        originTrafficSummary.record(imgBytes.length);
-                        return Optional.of(image);
-                    }
+    @Data
+    private static class RemoteFetchResult {
+        private final Optional<BufferedImage> image;
+        private final Optional<String> cacheControl;
+        private final Optional<String> etag;
+
+        public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+      private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
+        try {
+            CloseableHttpClient client = connectionService.getHttpClient();
+            HttpGet get = new HttpGet(origin.getUrl() + filename);
+            CloseableHttpResponse response = client.execute(get);
+            try {
+                HttpEntity entity = response.getEntity();
+                InputStream is = entity.getContent();
+                Optional<String> cacheHead = Optional.empty();
+                if (response.getHeaders("Cache-Control") != null) {
+                    cacheHead = Optional.of(response.getHeaders("Cache-Control").toString());
+                }
+                Optional<String> eTag = Optional.empty();
+                if (response.getHeaders("ETag") != null) {
+                    eTag = Optional.of(response.getHeaders("ETag").toString());
+                }
+                byte[] imgBytes = is.readAllBytes();
+                is.close();
+                BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
+                if (image == null) {
+                    return RemoteFetchResult.EMPTY_FETCH_RESULT;
+                }
+
+                originTrafficSummary.record(imgBytes.length);
+
+                return new RemoteFetchResult(Optional.of(image), cacheControl, etag);
             } catch (Exception e) {
-                return Optional.empty();
+                return RemoteFetchResult.EMPTY_FETCH_RESULT;
             } finally {
                 response.close();
             }
         } catch (Exception e) {
-            return Optional.empty();
+            return RemoteFetchResult.EMPTY_FETCH_RESULT;
         }
     }
 
@@ -155,5 +160,72 @@ public class ImageServiceImpl implements ImageService {
 
         var is = new ByteArrayInputStream(bao.toByteArray());
         return ImageIO.read(is);
+    }
+
+    private Optional<CacheResult> fetchRemoteProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
+        var remoteFetchResult = fetchRemoteImage(origin, filename, Co);
+
+        if (remoteFetchResult.image.isPresent()) {
+            missCounter.increment();
+
+            var maxAge = maxAgePattern.matcher(remoteFetchResult.cacheControl.orElse("max-age=0"));
+            long ttl = 0L;
+            if (maxAge.find()) {
+                ttl = Long.parseLong(maxAge.group(1));
+            }
+
+            // cache image without operations and conversion for an optimization
+            var originalCacheResult = cache.storeImage(origin, remoteFetchResult.image.get(), filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+            repository.save(new CacheRecord(origin.getHost(), filename, originalCacheResult.resultHash(), originalCacheResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
+
+            // process image
+            var image = processImage(remoteFetchResult.image.get(), operations, info);
+
+            // store image
+            var storeResult = cache.storeImage(origin, image, filename, operations, info);
+
+            if (!storeResult.resultHash().equals(originalCacheResult.resultHash())) {
+                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), storeResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
+            }
+
+            return Optional.of(storeResult);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<CacheResult> fetchLocalProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
+        var foundImage = cache.loadImage(origin, filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+
+        if (foundImage.isEmpty()) {
+            return Optional.empty();
+        }
+
+        var image = foundImage.get();
+        image = processImage(image, operations, info);
+        var result = cache.storeImage(origin, image, filename, operations, info);
+
+        var originalHash = cache.cacheHash(
+                origin,
+                filename,
+                Collections.emptyList(),
+                ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+
+        var originalRecord = repository .findByOriginAndNameHash( origin.getHost(), originalHash);
+
+        if (originalRecord.isPresent()) {
+            repository.save(originalRecord.get().cloneWithNewHash(result.resultHash(), result.totalResourceSizeInBytes()));
+        } else {
+            // this should not happen but just in case save it in database
+            repository.save(new CacheRecord(origin.getHost(), filename, result.resultHash(), result.totalResourceSizeInBytes(), "", 0L));
+        }
+
+        return Optional.of(result);
+    }
+
+    private BufferedImage processImage(BufferedImage image, List<ImageOperation> operations, ConversionInfo info) throws ImageOperationException, IOException {
+        for (var op : operations) {
+            image = op.run(image);
+        }
+        return compressImage(image, info);
     }
 }
