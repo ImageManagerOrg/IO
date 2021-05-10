@@ -30,15 +30,12 @@ logging:
 ---
 spring:
   datasource:
-    url: jdbc:sqlite:./testsqlite.db
-    driver-class-name: org.sqlite.JDBC
+    url: jdbc:h2:file:./testdb
+    driverClassName: org.h2.Driver
     username: sa
     password: password
-  jpa:
-    database-platform: com.io.image.manager.hibernate.SQLDialect
-    show-sql: true
-    hibernate:
-      ddl-auto: update
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
   config:
     activate:
       on-profile: test
