@@ -5,6 +5,7 @@ import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.service.ImageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.awt.image.BufferedImage;
@@ -15,10 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class CropOperationTest {
-
-    @Autowired
-    ImageService imageService;
-
     @Test
     void cropExecuteOperationTest() throws IOException, ImageOperationException {
         // given
