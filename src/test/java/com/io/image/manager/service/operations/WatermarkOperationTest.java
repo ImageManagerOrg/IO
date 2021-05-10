@@ -14,7 +14,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
 public class WatermarkOperationTest {
     boolean areImagesEqualSizesButDifferentPixelvise(BufferedImage buf1,BufferedImage buf2){
         int width  = buf1.getWidth();

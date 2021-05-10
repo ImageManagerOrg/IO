@@ -15,7 +15,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 class ImageOperationTest {
     @Test
     void multiExecuteOperationTest() throws IOException, ImageOperationException {

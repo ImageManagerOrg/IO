@@ -11,7 +11,6 @@ import java.util.Map;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 class ImageOperationParserTest {
 
     private static final String QUERY_EXAMPLE = "op=crop&w=1&h=1&op=scale&w=500&h=500";

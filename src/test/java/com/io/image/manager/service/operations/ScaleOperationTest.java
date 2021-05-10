@@ -14,7 +14,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 class ScaleOperationTest {
     @Test
     void scaleExecuteOperationTest() throws IOException, ImageOperationException {
