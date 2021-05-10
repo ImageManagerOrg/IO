@@ -15,9 +15,9 @@ public class AppConfigurationProperties {
     private String diskCacheMountPoint;
     private String diskLogMountPoint;
     private boolean urlShowMode;
+    private boolean logRequests;
     private String routesToLimit;
     private String connectionLimits;
-    private boolean logRequests;
     private long cacheStorageLimit;
     private int cacheStorageLimitAlert;
 

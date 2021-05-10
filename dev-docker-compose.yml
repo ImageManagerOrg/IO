@@ -41,6 +41,7 @@ services:
     networks:
       - grafana
 
+
   app:
     build: .
     healthcheck:
@@ -57,6 +58,10 @@ services:
       - LOG_REQUESTS=false
       - ORIGIN_ROUTES=http://origin
       - ROUTE_LIMITS=5
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
     volumes:
       - ./cache/:/data/cache/
       - ./log/:/data/log/
