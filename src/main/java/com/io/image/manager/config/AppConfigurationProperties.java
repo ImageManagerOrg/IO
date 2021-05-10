@@ -16,6 +16,8 @@ public class AppConfigurationProperties {
     private String diskLogMountPoint;
     private boolean urlShowMode;
     private boolean logRequests;
+    private String routesToLimit;
+    private String connectionLimits;
     private long cacheStorageLimit;
     private int cacheStorageLimitAlert;
 
@@ -67,9 +69,15 @@ public class AppConfigurationProperties {
         this.urlShowMode = urlShowMode;
     }
 
-    public boolean getLogRequests() {
-        return logRequests;
-    }
+    public String getRoutesToLimit() { return routesToLimit; }
+
+    public void setRoutesToLimit(String routeToLimit) { this.routesToLimit = routeToLimit; }
+
+    public String getConnectionLimits() { return connectionLimits; }
+
+    public void setConnectionLimits(String connectionLimit) { this.connectionLimits = connectionLimit; }
+
+    public boolean getLogRequests() {return logRequests; }
 
     public void setLogRequests(String logRequests) {
         this.logRequests = logRequests.equals("true");

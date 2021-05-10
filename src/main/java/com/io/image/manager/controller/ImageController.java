@@ -1,5 +1,6 @@
 package com.io.image.manager.controller;
 
+
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
@@ -61,6 +62,7 @@ public class ImageController {
             }
             writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
         }
+
     }
 
     /**

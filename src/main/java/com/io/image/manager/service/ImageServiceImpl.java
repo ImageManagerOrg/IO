@@ -1,5 +1,8 @@
 package com.io.image.manager.service;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
@@ -15,6 +18,7 @@ import com.io.image.manager.service.operations.ImageOperationParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.apache.http.impl.client.CloseableHttpClient;
 import lombok.Data;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +31,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.rmi.Remote;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -45,9 +45,10 @@ public class ImageServiceImpl implements ImageService {
     private final ImageCache cache;
     private final Counter missCounter;
     private final DistributionSummary originTrafficSummary;
+    private final ConnectionService connectionService;
     private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
-
-    public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr) {
+  
+    public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.props = props;
         this.repository = repository;
         this.cache = cache;
@@ -56,6 +57,7 @@ public class ImageServiceImpl implements ImageService {
                 .builder("origin.traffic.size")
                 .baseUnit("bytes") // optional
                 .register(mr);
+        this.connectionService = connectionService;
     }
 
     @Override
@@ -90,41 +92,44 @@ public class ImageServiceImpl implements ImageService {
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
+
     @Data
     private static class RemoteFetchResult {
         private final Optional<BufferedImage> image;
         private final Optional<String> cacheControl;
         private final Optional<String> etag;
-
         public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
+      private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
         try {
-            URL url = new URL(origin.getUrl() + filename);
-            URLConnection conn = url.openConnection();
-
-            var headers = conn.getHeaderFields();
-
-            Optional<String> cacheControl = Optional.empty();
-            if (headers.containsKey("Cache-Control")) {
-                cacheControl = headers.get("Cache-Control").stream().findFirst();
-            }
-
-            Optional<String> etag = Optional.empty();
-            if (headers.containsKey("ETag")) {
-                etag = headers.get("ETag").stream().findFirst();
-            }
-
-            byte[] imgBytes = conn.getInputStream().readAllBytes();
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
-            if (image == null) {
+            CloseableHttpClient client = connectionService.getHttpClient();
+            HttpGet get = new HttpGet(origin.getUrl() + filename);
+            CloseableHttpResponse response = client.execute(get);
+            try {
+                HttpEntity entity = response.getEntity();
+                InputStream is = entity.getContent();
+                Optional<String> cacheControl = Optional.empty();
+                if (response.getHeaders("Cache-Control") != null) {
+                    cacheControl = Optional.of(response.getHeaders("Cache-Control").toString());
+                }
+                Optional<String> etag = Optional.empty();
+                if (response.getHeaders("ETag") != null) {
+                    etag = Optional.of(response.getHeaders("ETag").toString());
+                }
+                byte[] imgBytes = is.readAllBytes();
+                is.close();
+                BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
+                if (image == null) {
+                    return RemoteFetchResult.EMPTY_FETCH_RESULT;
+                }
+                originTrafficSummary.record(imgBytes.length);
+                return new RemoteFetchResult(Optional.of(image), cacheControl, etag);
+            } catch (Exception e) {
                 return RemoteFetchResult.EMPTY_FETCH_RESULT;
+            } finally {
+                response.close();
             }
-
-            originTrafficSummary.record(imgBytes.length);
-
-            return new RemoteFetchResult(Optional.of(image), cacheControl, etag);
         } catch (Exception e) {
             return RemoteFetchResult.EMPTY_FETCH_RESULT;
         }
