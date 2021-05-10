@@ -55,6 +55,10 @@ services:
       - ORIGIN=http://origin:5000/
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
       - LOG_REQUESTS=false
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
     volumes:
       - ./cache/:/data/cache/
       - ./log/:/data/log/
