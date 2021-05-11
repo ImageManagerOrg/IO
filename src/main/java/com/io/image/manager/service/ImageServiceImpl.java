@@ -230,8 +230,4 @@ public class ImageServiceImpl implements ImageService {
         }
         return compressImage(image, info);
     }
-
-    public int getTTL(String origin, String nameHash) {
-        return repository.getTTL(origin, nameHash);
-    }
 }
