@@ -16,6 +16,11 @@ public class DiskCacheResult implements CacheResult {
     private String resultHash;
     private long ttl;
 
+    public DiskCacheResult(Path imageDestination, String resultHash) {
+        this.imageDestination = imageDestination;
+        this.resultHash = resultHash;
+    }
+
     @Override
     public AbstractResource getCacheResource() {
         return new FileSystemResource(this.imageDestination);
