@@ -1,6 +1,5 @@
 package com.io.image.manager.service.operations;
 
-import com.io.image.manager.exceptions.ImageOperationException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;

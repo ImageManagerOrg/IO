@@ -1,15 +1,12 @@
 package com.io.image.manager.service;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import com.io.image.manager.cache.CacheResult;
+import com.io.image.manager.cache.ImageCache;
+import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
 import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
-import com.io.image.manager.cache.ImageCache;
-import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.models.CacheRecord;
 import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
@@ -18,8 +15,11 @@ import com.io.image.manager.service.operations.ImageOperationParser;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-import org.apache.http.impl.client.CloseableHttpClient;
 import lombok.Data;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -47,7 +47,7 @@ public class ImageServiceImpl implements ImageService {
     private final DistributionSummary originTrafficSummary;
     private final ConnectionService connectionService;
     private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
-  
+
     public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.props = props;
         this.repository = repository;
@@ -72,6 +72,8 @@ public class ImageServiceImpl implements ImageService {
         if (cacheResult.isPresent()) {
             try {
                 repository.incrementImageHit(origin.getHost(), cacheResult.get().resultHash());
+                int ttl = repository.getTTL(origin.getHost(), cacheResult.get().resultHash());
+                cacheResult.get().setTTL(ttl);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -101,7 +103,7 @@ public class ImageServiceImpl implements ImageService {
         public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-      private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
+    private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
         try {
             CloseableHttpClient client = connectionService.getHttpClient();
             HttpGet get = new HttpGet(origin.getUrl() + filename);
@@ -173,7 +175,7 @@ public class ImageServiceImpl implements ImageService {
 
             // cache image without operations and conversion for an optimization
             var originalCacheResult = cache.storeImage(origin, remoteFetchResult.image.get(), filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
-            repository.save(new CacheRecord(origin.getHost(), filename, originalCacheResult.resultHash(), originalCacheResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
+            repository.save(new CacheRecord(origin.getHost(), filename, originalCacheResult.resultHash(), originalCacheResult.totalResourceSizeInBytes(), remoteFetchResult.etag.orElse(""), ttl));
 
             // process image
             var image = processImage(remoteFetchResult.image.get(), operations, info);
@@ -182,8 +184,9 @@ public class ImageServiceImpl implements ImageService {
             var storeResult = cache.storeImage(origin, image, filename, operations, info);
 
             if (!storeResult.resultHash().equals(originalCacheResult.resultHash())) {
-                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), storeResult.totalResourceSizeInBytes(),  remoteFetchResult.etag.orElse(""), ttl));
+                repository.save(new CacheRecord(origin.getHost(), filename, storeResult.resultHash(), storeResult.totalResourceSizeInBytes(), remoteFetchResult.etag.orElse(""), ttl));
             }
+            storeResult.setTTL(ttl);
 
             return Optional.of(storeResult);
         }
@@ -207,13 +210,15 @@ public class ImageServiceImpl implements ImageService {
                 Collections.emptyList(),
                 ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
 
-        var originalRecord = repository .findByOriginAndNameHash( origin.getHost(), originalHash);
+        var originalRecord = repository.findByOriginAndNameHash(origin.getHost(), originalHash);
 
         if (originalRecord.isPresent()) {
             repository.save(originalRecord.get().cloneWithNewHash(result.resultHash(), result.totalResourceSizeInBytes()));
+            result.setTTL(originalRecord.get().getTtl());
         } else {
             // this should not happen but just in case save it in database
             repository.save(new CacheRecord(origin.getHost(), filename, result.resultHash(), result.totalResourceSizeInBytes(), "", 0L));
+            result.setTTL(0L);
         }
 
         return Optional.of(result);
@@ -224,5 +229,9 @@ public class ImageServiceImpl implements ImageService {
             image = op.run(image);
         }
         return compressImage(image, info);
+    }
+
+    public int getTTL(String origin, String nameHash) {
+        return repository.getTTL(origin, nameHash);
     }
 }

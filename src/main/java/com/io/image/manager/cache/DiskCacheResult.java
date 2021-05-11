@@ -14,6 +14,7 @@ import java.nio.file.Path;
 public class DiskCacheResult implements CacheResult {
     private Path imageDestination;
     private String resultHash;
+    private long ttl;
 
     @Override
     public AbstractResource getCacheResource() {
@@ -28,5 +29,15 @@ public class DiskCacheResult implements CacheResult {
     @Override
     public String resultHash() {
         return this.resultHash;
+    }
+
+    @Override
+    public void setTTL(long ttl) {
+        this.ttl = ttl;
+    }
+
+    @Override
+    public long getTTL() {
+        return ttl;
     }
 }

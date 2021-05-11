@@ -1,11 +1,12 @@
 package com.io.image.manager.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,7 +14,7 @@ public class CacheRecord {
     protected CacheRecord() {
     }
 
-    public CacheRecord(String origin, String imageFilename, String nameHash, Long sizeInBytes,  String etag, Long ttl) {
+    public CacheRecord(String origin, String imageFilename, String nameHash, Long sizeInBytes, String etag, Long ttl) {
         var imageId = Integer.parseInt(imageFilename.substring(0, imageFilename.lastIndexOf(".")));
         this.origin = origin;
         this.imageId = imageId;
