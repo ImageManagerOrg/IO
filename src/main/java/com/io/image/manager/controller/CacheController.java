@@ -3,10 +3,7 @@ package com.io.image.manager.controller;
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.data.DeleteCacheRequest;
 import com.io.image.manager.origin.OriginServer;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 

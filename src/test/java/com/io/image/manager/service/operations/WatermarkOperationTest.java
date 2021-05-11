@@ -34,9 +34,7 @@ public class WatermarkOperationTest {
         }
 
         return false;
-    }
-
-    ;
+    };
 
     @Test
     void watermarkExecuteOperationTest() throws IOException, ImageOperationException {
