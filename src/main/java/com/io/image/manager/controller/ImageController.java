@@ -94,9 +94,14 @@ public class ImageController {
             }
             logger.info(url);
         }
-        var origin = new OriginServer(props.getOriginServer());
-        // uncomment when requests start to include origin header
-        // var origin = originFromHost(host);
+
+        OriginServer origin;
+        if (host.contains("com")) {
+            origin = originFromHost(host);
+        }
+        else {
+            origin = new OriginServer(props.getOriginServer());
+        }
 
         List<ImageOperation> operations = ImageOperationParser.parseAndGetOperationList(request.getQueryString());
         ConversionInfo conversionInfo = ImageOperationParser.parseConversion(filename, request.getQueryString());
