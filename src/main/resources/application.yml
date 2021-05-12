@@ -21,6 +21,8 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: false
   url-show-mode: true
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
   cache-storage-limit: 100000000
   cache-storage-limit-alert: 90
 logging:
@@ -45,6 +47,8 @@ image-manager:
   disk-log-mount-point: /data/log
   log-requests: true
   url-show-mode: true
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
   cache-storage-limit: 1000000000
   cache-storage-limit-alert: 80
 ---
@@ -67,6 +71,8 @@ image-manager:
   disk-log-mount-point: ${LOG_DIR}
   log-requests: ${LOG_REQUESTS}
   url-show-mode: true
+  routes-to-limit: ${ORIGIN_ROUTES}
+  connection-limits: ${ROUTE_LIMITS}
   cache-storage-limit: ${CACHE_STORAGE_LIMIT}
   cache-storage-limit-alert: ${CACHE_STORAGE_LIMIT_ALERT}
 ---

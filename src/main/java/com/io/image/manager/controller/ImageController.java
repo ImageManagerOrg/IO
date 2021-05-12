@@ -1,5 +1,6 @@
 package com.io.image.manager.controller;
 
+
 import com.io.image.manager.cache.CacheResult;
 import com.io.image.manager.config.AppConfigurationProperties;
 import com.io.image.manager.data.ConversionInfo;
@@ -8,9 +9,9 @@ import com.io.image.manager.exceptions.ImageNotFoundException;
 import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
+import com.io.image.manager.service.ImageService;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
-import com.io.image.manager.service.ImageService;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -61,6 +62,7 @@ public class ImageController {
             }
             writer = new BufferedWriter(new FileWriter(logDir + "/IM_log.txt", true));
         }
+
     }
 
     /**
@@ -121,7 +123,9 @@ public class ImageController {
 
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
-        return ResponseEntity.ok(cacheResult.getCacheResource());
+        return ResponseEntity.ok()
+                .header("ttl", String.valueOf(cacheResult.getTTL()))
+                .body(cacheResult.getCacheResource());
     }
 
     private synchronized void logRequest(String filename, String origin, String isPresent, List<ImageOperation> operations) {

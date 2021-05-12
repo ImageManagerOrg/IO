@@ -3,8 +3,6 @@ package com.io.image.manager.models;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,7 +51,7 @@ class CacheRecordRepositoryTest {
 
         // then
         assertEquals(newResult.getTtl(), 999L);
-        assert(newResult.getRemoteFetch().isAfter(result.getRemoteFetch()));
+        assert (newResult.getRemoteFetch().isAfter(result.getRemoteFetch()));
     }
 
 }

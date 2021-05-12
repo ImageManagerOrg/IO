@@ -15,8 +15,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WatermarkOperationTest {
-    boolean areImagesEqualSizesButDifferentPixelvise(BufferedImage buf1,BufferedImage buf2){
-        int width  = buf1.getWidth();
+    boolean areImagesEqualSizesButDifferentPixelvise(BufferedImage buf1, BufferedImage buf2) {
+        int width = buf1.getWidth();
         int height = buf1.getHeight();
 
         if (buf1.getWidth() != buf2.getWidth() || buf1.getHeight() != buf2.getHeight()) {
@@ -47,6 +47,6 @@ public class WatermarkOperationTest {
         var logoAghImageProcessed = watermarkOperation.run(logoAghImagePrimary);
 
         // then
-        assertTrue(areImagesEqualSizesButDifferentPixelvise(logoAghImageProcessed,logoAghImageControl));
+        assertTrue(areImagesEqualSizesButDifferentPixelvise(logoAghImageProcessed, logoAghImageControl));
     }
 }
