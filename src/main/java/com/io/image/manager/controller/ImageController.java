@@ -156,6 +156,6 @@ public class ImageController {
     }
 
     private OriginServer originFromHost(String host) {
-        return new OriginServer(String.format("https://%s/", host));
+        return new OriginServer(String.format("http://%s/", host));
     }
 }
