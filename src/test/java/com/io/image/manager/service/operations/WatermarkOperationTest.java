@@ -5,6 +5,8 @@ import com.io.image.manager.exceptions.ImageOperationException;
 import com.io.image.manager.service.ImageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -13,9 +15,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WatermarkOperationTest {
-    @Autowired
-    ImageService imageService;
-
     boolean areImagesEqualSizesButDifferentPixelvise(BufferedImage buf1, BufferedImage buf2) {
         int width = buf1.getWidth();
         int height = buf1.getHeight();
