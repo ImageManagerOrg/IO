@@ -1,7 +1,6 @@
 package com.io.image.manager.cache;
 
 import org.springframework.core.io.AbstractResource;
-import org.springframework.core.io.InputStreamResource;
 
 import java.io.IOException;
 
@@ -11,4 +10,8 @@ public interface CacheResult {
     long totalResourceSizeInBytes() throws IOException;
 
     String resultHash();
+
+    void setTTL(long ttl);
+
+    long getTTL();
 }

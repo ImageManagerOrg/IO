@@ -4,7 +4,6 @@ import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.data.DeleteCacheRequest;
 import com.io.image.manager.origin.OriginServer;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.function.EntityResponse;
 
 import java.io.IOException;
 

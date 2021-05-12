@@ -33,7 +33,7 @@ public class PeriodicDiskCacheCleanup {
     public void diskCapacityAlertCleanup() {
         var currentUsage = FileUtils.sizeOfDirectory(new File(props.getDiskCacheMountPoint()));
 
-        var currentPercentageUsage = (100.0 *  currentUsage) / props.getCacheStorageLimit();
+        var currentPercentageUsage = (100.0 * currentUsage) / props.getCacheStorageLimit();
 
         log.info("Current cache usage level: {}%", currentPercentageUsage);
 
@@ -66,19 +66,19 @@ public class PeriodicDiskCacheCleanup {
         Path cachePath = Paths.get(props.getDiskCacheMountPoint());
 
         Files
-            .walk(cachePath)
-            .filter(Files::isDirectory)
-            .filter(this::isImageDirectory)
-            .forEach(dir -> {
-                if (!cachedPaths.contains(dir.toString())) {
-                    try {
-                        log.warn("Deleting " + dir.toString() + " as it is no longer tracked");
-                        FileUtils.forceDelete(new File(dir.toString()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                .walk(cachePath)
+                .filter(Files::isDirectory)
+                .filter(this::isImageDirectory)
+                .forEach(dir -> {
+                    if (!cachedPaths.contains(dir.toString())) {
+                        try {
+                            log.warn("Deleting " + dir.toString() + " as it is no longer tracked");
+                            FileUtils.forceDelete(new File(dir.toString()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-        });
+                });
 
         log.info("Finished garbage collection of untracked images");
     }
