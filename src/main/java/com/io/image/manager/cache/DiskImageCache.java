@@ -68,8 +68,7 @@ public class DiskImageCache implements ImageCache {
             Files.createDirectories(parentDir);
         }
 
-        // TODO: change jpg hardcoded format to take it from filename extension
-        ImageIO.write(image, "jpg", Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
+        ImageIO.write(image, info.getFormat(), Files.newOutputStream(path.get(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING));
 
         return new DiskCacheResult(path.get(), cacheHash(origin, filename, operations, info));
     }
