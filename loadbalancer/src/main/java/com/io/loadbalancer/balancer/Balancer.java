@@ -2,7 +2,6 @@ package com.io.loadbalancer.balancer;
 
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -29,7 +28,7 @@ public class Balancer {
         try {
             Random r = new Random();
             var manager = imageManagers.get(r.nextInt(imageManagers.size()));
-            var managerUri = new URI(manager.getUrl()) ;
+            var managerUri = new URI(manager.getUrl());
 
             uri = UriComponentsBuilder
                     .fromUri(request.uri())
@@ -40,22 +39,21 @@ public class Balancer {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        System.out.println(uri.toString());
-
 
         return client
                 .get()
                 .uri(uri)
                 .headers(headers -> headers.addAll(request.headers().asHttpHeaders()))
                 .accept(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG)
-                .exchangeToMono(response -> {
-                    var head = response.headers().asHttpHeaders();
-
-                    return ServerResponse
-                                .status(response.statusCode())
-                                .headers(headers -> headers.addAll(head))
-                                .body(response.bodyToMono(DataBuffer.class), DataBuffer.class);
-                });
+                .exchangeToMono(response ->
+                        response
+                                .bodyToMono(DataBuffer.class)
+                                .flatMap(body ->
+                                        ServerResponse
+                                                .status(response.statusCode())
+                                                .headers(headers -> headers.addAll(response.headers().asHttpHeaders()))
+                                                .bodyValue(body)
+                                ));
     }
-
 }
+
