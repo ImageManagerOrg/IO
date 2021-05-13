@@ -16,11 +16,11 @@ jobs:
         with:
           java-version: 15
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for image manager gradlew
+        run: chmod +x imagemanager/gradlew
 
-      - name: Test with Gradle
-        run: ./gradlew test
+      - name: Test image manager with Gradle
+        run: ./imagemanager/gradlew test
 
 
   push:
@@ -38,6 +38,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
+          context: ./imagemanager
           push: true
           tags: orgmanager/image_manager:latest
   

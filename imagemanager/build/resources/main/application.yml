@@ -1,0 +1,101 @@
+spring:
+  profiles:
+    active: dev
+---
+spring:
+  datasource:
+    url: jdbc:sqlite:../cache/sqlitesample.db
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: password
+  jpa:
+    database-platform: com.io.image.manager.hibernate.SQLDialect
+    hibernate:
+      ddl-auto: update
+  config:
+    activate:
+      on-profile: dev
+image-manager:
+  origin-server: http://localhost:5000/
+  disk-cache-mount-point: ../cache
+  disk-log-mount-point: ../log
+  log-requests: false
+  url-show-mode: true
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
+  cache-storage-limit: 100000000
+  cache-storage-limit-alert: 90
+logging:
+  level:
+    org.springframework.web: DEBUG
+    web: DEBUG
+---
+spring:
+  datasource:
+    url: jdbc:sqlite:../cache/test.db
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: password
+  jpa:
+    database-platform: com.io.image.manager.hibernate.SQLDialect
+  config:
+    activate:
+      on-profile: test
+image-manager:
+  origin-server: http://localhost:5000/
+  disk-cache-mount-point: ../cache
+  disk-log-mount-point: ../log
+  log-requests: true
+  url-show-mode: true
+  routes-to-limit: http://localhost:5000
+  connection-limits: 5
+  cache-storage-limit: 1000000000
+  cache-storage-limit-alert: 80
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:sqlite:${CACHE_DIR}/prodsqlite.db
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: password
+  jpa:
+    database-platform: com.io.image.manager.hibernate.SQLDialect
+    hibernate:
+      ddl-auto: update
+image-manager:
+  origin-server: ${ORIGIN}
+  disk-cache-mount-point: ${CACHE_DIR}
+  disk-log-mount-point: ${LOG_DIR}
+  log-requests: ${LOG_REQUESTS}
+  url-show-mode: true
+  routes-to-limit: ${ORIGIN_ROUTES}
+  connection-limits: ${ROUTE_LIMITS}
+  cache-storage-limit: ${CACHE_STORAGE_LIMIT}
+  cache-storage-limit-alert: ${CACHE_STORAGE_LIMIT_ALERT}
+---
+management:
+  healths:
+    probles:
+      enabled: true
+  metrics:
+    export.prometheus.enabled: true
+    distribution.percentiles.http.server.requests: 0.5, 0.90, 0.99
+    web.server.request.autotime.enabled: false
+    enable:
+      jvm: false
+      tomcat: false
+      system: false
+      logback: false
+  endpoints:
+    web:
+      # by default Spring expose actuator endpoints on /actuator/ path but prometheus needs it be on /
+      base-path: /
+      exposure:
+        include: "*"
+      path-mapping:
+        # prometheus looks at /metrics by default when scraping for metrics
+        metrics: spring-metrics
+        prometheus: metrics

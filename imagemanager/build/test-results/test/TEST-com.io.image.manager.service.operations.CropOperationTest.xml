@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.io.image.manager.service.operations.CropOperationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2021-05-12T16:11:20" hostname="Jakubs-MacBook-Pro-2.local" time="0.03">
+  <properties/>
+  <testcase name="cropExecuteOperationTest()" classname="com.io.image.manager.service.operations.CropOperationTest" time="0.017"/>
+  <testcase name="throwImageOperationExceptionWhenWrongOperationParams()" classname="com.io.image.manager.service.operations.CropOperationTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

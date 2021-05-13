@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.io.image.manager.ImageManagerApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2021-05-12T16:11:07" hostname="Jakubs-MacBook-Pro-2.local" time="0.101">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.io.image.manager.ImageManagerApplicationTests" time="0.101"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
