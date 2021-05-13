@@ -80,7 +80,7 @@ public class ImageController {
     @RequestMapping(
             value = "/{filename}",
             method = RequestMethod.GET,
-            produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE}
+            produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE}
     )
     public ResponseEntity<AbstractResource> getImage(
             @RequestHeader("Host") String host,
@@ -111,7 +111,7 @@ public class ImageController {
         // ==============
 
         String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
-
+        String contentType = filename.substring(filename.lastIndexOf(".") + 1).equals("jpg") ? "jpeg" : "png";
         CacheResult cacheResult;
         try {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
@@ -130,6 +130,7 @@ public class ImageController {
 
         return ResponseEntity.ok()
                 .header("ttl", String.valueOf(cacheResult.getTTL()))
+                .header("Content-Type", "image/" + contentType)
                 .body(cacheResult.getCacheResource());
     }
 
