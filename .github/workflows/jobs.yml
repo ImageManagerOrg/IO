@@ -17,10 +17,12 @@ jobs:
           java-version: 15
 
       - name: Grant execute permission for image manager gradlew
-        run: chmod +x imagemanager/gradlew
+        run: chmod +x gradlew
+        working-directory: ./imagemanager
 
       - name: Test image manager with Gradle
-        run: ./imagemanager/gradlew test
+        run: ./gradlew test
+        working-directory: ./imagemanager
 
 
   push:
