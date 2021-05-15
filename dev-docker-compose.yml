@@ -43,7 +43,9 @@ services:
 
 
   app:
-    build: .
+    build: 
+      context: ./imagemanager
+      dockerfile: Dockerfile
     healthcheck:
       test: curl --fail http://localhost:8080/health || exit 1
       interval: 10s

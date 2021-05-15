@@ -4,7 +4,7 @@ spring:
 ---
 spring:
   datasource:
-    url: jdbc:sqlite:./cache/sqlitesample.db
+    url: jdbc:sqlite:../cache/sqlitesample.db
     driver-class-name: org.sqlite.JDBC
     username: sa
     password: password
@@ -17,8 +17,8 @@ spring:
       on-profile: dev
 image-manager:
   origin-server: http://localhost:5000/
-  disk-cache-mount-point: cache
-  disk-log-mount-point: /data/log
+  disk-cache-mount-point: ../cache
+  disk-log-mount-point: ../log
   log-requests: false
   url-show-mode: true
   routes-to-limit: http://localhost:5000
@@ -32,7 +32,7 @@ logging:
 ---
 spring:
   datasource:
-    url: jdbc:sqlite:./cache/test.db
+    url: jdbc:sqlite:../cache/test.db
     driver-class-name: org.sqlite.JDBC
     username: sa
     password: password
@@ -43,8 +43,8 @@ spring:
       on-profile: test
 image-manager:
   origin-server: http://localhost:5000/
-  disk-cache-mount-point: cache
-  disk-log-mount-point: /data/log
+  disk-cache-mount-point: ../cache
+  disk-log-mount-point: ../log
   log-requests: true
   url-show-mode: true
   routes-to-limit: http://localhost:5000

@@ -111,7 +111,6 @@ public class ImageController {
         // ==============
 
         String normalizedFilename = filename.substring(0, filename.indexOf(".")) + ".jpg";
-        String contentType = filename.substring(filename.lastIndexOf(".") + 1).equals("jpg") ? "jpeg" : "png";
         CacheResult cacheResult;
         try {
             cacheResult = imageService.fetchAndCacheImage(origin, normalizedFilename, operations, conversionInfo);
@@ -128,9 +127,17 @@ public class ImageController {
 
         outboundTrafficSummary.record(cacheResult.totalResourceSizeInBytes());
 
+        var extension = filename.substring(filename.lastIndexOf(".") + 1);
+
+        var contentType = switch (extension)  {
+            case "png" -> "image/png";
+            case "jpg" -> "image/jpeg";
+            default -> throw new RuntimeException("Invalid file extension");
+        };
+
         return ResponseEntity.ok()
                 .header("ttl", String.valueOf(cacheResult.getTTL()))
-                .header("Content-Type", "image/" + contentType)
+                .header("Content-Type", contentType)
                 .body(cacheResult.getCacheResource());
     }
 
