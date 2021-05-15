@@ -15,9 +15,14 @@ jobs:
         with:
           java-version: 15
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for image manager's gradlew
+        run: chmod +x imagemanager/gradlew
 
-      - name: Test with Gradle
-        run: ./gradlew test
+      - name: Test image manager with Gradle
+        run: ./imagemanager/gradlew test
 
+      - name: Grant execute permission for load balancer's gradlew
+        run: chmod +x loadbalancer/gradlew
+
+      - name: Test load balancer with Gradle
+        run: ./loadbalancer/gradlew test
