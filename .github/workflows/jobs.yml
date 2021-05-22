@@ -6,35 +6,35 @@ on:
       - main
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 15
-
-      - name: Grant execute permission for image manager's gradlew
-        run: chmod +x gradlew
-        working-directory: ./imagemanager
-
-      - name: Test image manager with Gradle
-        run: ./gradlew test
-        working-directory: ./imagemanager
-
-      - name: Grant execute permission for load balancer's gradlew
-        run: chmod +x gradlew
-        working-directory: ./loadbalancer
-
-      - name: Test load balancer with Gradle
-        run: ./gradlew test
-        working-directory: ./loadbalancer
+#  test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Set up JDK
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 15
+#
+#      - name: Grant execute permission for image manager's gradlew
+#        run: chmod +x gradlew
+#        working-directory: ./imagemanager
+#
+#      - name: Test image manager with Gradle
+#        run: ./gradlew test
+#        working-directory: ./imagemanager
+#
+#      - name: Grant execute permission for load balancer's gradlew
+#        run: chmod +x gradlew
+#        working-directory: ./loadbalancer
+#
+#      - name: Test load balancer with Gradle
+#        run: ./gradlew test
+#        working-directory: ./loadbalancer
 
 
   push:
-    needs: test
+#    needs: test
     runs-on: ubuntu-latest
     steps:
       -
@@ -46,112 +46,109 @@ jobs:
       -
         name: Build and push imagemanager
         id: docker_build_imagemanager
-        uses: docker/build-push-action@v2
-        with:
-          file: imagemanager/Dockerfile
-          context: imagemanager
-          push: true
-          tags: orgmanager/image_manager:latest
+        run: |
+          docker build -f imagemanager/Dockerfile -t imagemanager imagemanager
+          docker tag imagemanager orgmanager/imagemanager:latest
+          docker push orgmanager/imagemanager:latest
+
       - name: Build and push loadbalancer
         id: docker_build_loadbalancer
-        uses: docker/build-push-action@v2
-        with:
-          file: loadbalancer/Dockerfile
-          context: loadbalancer
-          push: true
-          tags: orgmanager/load_balancer:latest
-
-  deploy-imagemanager-1:
-    needs: push
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Generate prometheus config
-      run: |
-        sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ secrets.GRAFANA_PASSWORD }}/" \
-        prometheus/prod-prometheus.yml > prometheus.yml
-
-    - name: Copy prometheus config
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.DEPLOY_IMAGEMANAGER_1_HOST }}
-        username: ubuntu
-        port: 22
-        key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-        source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
-        target: "deployment"
-
-    - name: Start docker-compose
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.DEPLOY_IMAGEMANAGER_1_HOST }}
-        username: ubuntu
-        key: ${{ secrets.DOCKER_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd deployment
-          chmod +x scripts/*
-          ./scripts/imagemanager/deploy.sh
-
-  deploy-imagemanager-2:
-    needs: push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Generate prometheus config
         run: |
-          sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ secrets.GRAFANA_PASSWORD }}/" \
-          prometheus/prod-prometheus.yml > prometheus.yml
+          docker build -f loadbalancer/Dockerfile -t loadbalancer loadbalancer
+          docker tag loadbalancer orgmanager/loadbalancer:latest
+          docker push orgmanager/loadbalancer:latest
 
-      - name: Copy prometheus config
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DEPLOY_IMAGEMANAGER_2_HOST }}
-          username: ubuntu
-          port: 22
-          key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-          source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
-          target: "deployment"
-
-      - name: Start docker-compose
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DEPLOY_IMAGEMANAGER_2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.DOCKER_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd deployment
-            chmod +x scripts/*
-            ./scripts/imagemanager/deploy.sh
-
-  deploy-loadbalancer:
-    needs: push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Copy necessarry files
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DEPLOY_LOADBALANCER_HOST }}
-          username: ubuntu
-          port: 22
-          key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-          source: "loadbalancer/prod-docker-compose.yml,scripts/loadbalancer/*,router/*"
-          target: "deployment"
-
-      - name: Start docker-compose
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DEPLOY_LOADBALANCER_HOST }}
-          username: ubuntu
-          key: ${{ secrets.DOCKER_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd deployment
-            chmod +x scripts/*
-            ./scripts/laodbalancer/deploy.sh
+#  deploy-imagemanager-1:
+#    needs: push
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v2
+#    - name: Generate prometheus config
+#      run: |
+#        sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ secrets.GRAFANA_PASSWORD }}/" \
+#        prometheus/prod-prometheus.yml > prometheus.yml
+#
+#    - name: Copy prometheus config
+#      uses: appleboy/scp-action@master
+#      with:
+#        host: ${{ secrets.DEPLOY_IMAGEMANAGER_1_HOST }}
+#        username: ubuntu
+#        port: 22
+#        key: ${{ secrets.DOCKER_PRIVATE_KEY}}
+#        source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
+#        target: "deployment"
+#
+#    - name: Start docker-compose
+#      uses: appleboy/ssh-action@master
+#      with:
+#        host: ${{ secrets.DEPLOY_IMAGEMANAGER_1_HOST }}
+#        username: ubuntu
+#        key: ${{ secrets.DOCKER_PRIVATE_KEY }}
+#        port: 22
+#        script: |
+#          cd deployment
+#          chmod +x scripts/*
+#          ./scripts/imagemanager/deploy.sh
+#
+#  deploy-imagemanager-2:
+#    needs: push
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Generate prometheus config
+#        run: |
+#          sed -e "s/GRAFANA_USERNAME/${{ secrets.GRAFANA_USERNAME }}/;s/GRAFANA_PASSWORD/${{ secrets.GRAFANA_PASSWORD }}/" \
+#          prometheus/prod-prometheus.yml > prometheus.yml
+#
+#      - name: Copy prometheus config
+#        uses: appleboy/scp-action@master
+#        with:
+#          host: ${{ secrets.DEPLOY_IMAGEMANAGER_2_HOST }}
+#          username: ubuntu
+#          port: 22
+#          key: ${{ secrets.DOCKER_PRIVATE_KEY}}
+#          source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
+#          target: "deployment"
+#
+#      - name: Start docker-compose
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.DEPLOY_IMAGEMANAGER_2_HOST }}
+#          username: ubuntu
+#          key: ${{ secrets.DOCKER_PRIVATE_KEY }}
+#          port: 22
+#          script: |
+#            cd deployment
+#            chmod +x scripts/*
+#            ./scripts/imagemanager/deploy.sh
+#
+#  deploy-loadbalancer:
+#    needs: push
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      - name: Copy necessarry files
+#        uses: appleboy/scp-action@master
+#        with:
+#          host: ${{ secrets.DEPLOY_LOADBALANCER_HOST }}
+#          username: ubuntu
+#          port: 22
+#          key: ${{ secrets.DOCKER_PRIVATE_KEY}}
+#          source: "loadbalancer/prod-docker-compose.yml,scripts/loadbalancer/*,router/*"
+#          target: "deployment"
+#
+#      - name: Start docker-compose
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.DEPLOY_LOADBALANCER_HOST }}
+#          username: ubuntu
+#          key: ${{ secrets.DOCKER_PRIVATE_KEY }}
+#          port: 22
+#          script: |
+#            cd deployment
+#            chmod +x scripts/*
+#            ./scripts/laodbalancer/deploy.sh
