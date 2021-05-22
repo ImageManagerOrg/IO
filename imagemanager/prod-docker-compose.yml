@@ -1,0 +1,79 @@
+version: "3.8"
+
+networks:
+  grafana:
+
+volumes:
+  app_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - app_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--storage.tsdb.retention.size=1GB"
+    ports:
+      - 9090:9090
+    networks:
+      - grafana
+  
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - grafana
+
+  app:
+    image: orgmanager/imagemanager:latest
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - CACHE_DIR=/data/cache
+      - LOG_DIR=/data/log
+      - ORIGIN=http://origin/
+      - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+      - LOG_REQUESTS=false
+      - ORIGIN_ROUTES=http://origin
+      - ROUTE_LIMITS=5
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
+    extra_hosts:
+      # change it so private IPs are not hard coded
+      - "origin:10.0.156.95"
+      - "b.com:10.0.156.95"
+      - "a.com:10.0.156.95"
+    volumes:
+      - /mnt/image-cache-part/cache:/data/cache
+      - /mnt/log:/data/log
+    ports:
+      - 8080:8080
+      - 1098:1098
+    networks:
+      - grafana
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+

@@ -1,0 +1,96 @@
+version: "3.8"
+
+networks:
+  grafana:
+
+volumes:
+  app_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/dev-prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - 9090:9090
+    networks:
+      - grafana
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - grafana
+
+  grafana:
+    image: grafana/grafana:7.3.6
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards/:/etc/dashboards/
+    ports:
+      - 3000:3000
+    networks:
+      - grafana
+
+
+  app:
+    build: 
+      context: ./imagemanager
+      dockerfile: Dockerfile
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - CACHE_DIR=/data/cache
+      - ORIGIN=http://origin:5000/
+      - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+      - LOG_REQUESTS=false
+      - ORIGIN_ROUTES=http://origin
+      - ROUTE_LIMITS=5
+      # 12GB
+      - CACHE_STORAGE_LIMIT=12000000000
+      # 90%
+      - CACHE_STORAGE_LIMIT_ALERT=90
+    volumes:
+      - ./cache/:/data/cache/
+      - ./log/:/data/log/
+    restart: always
+    ports:
+      - 8080:8080
+      - 1098:1098
+    networks:
+      - grafana
+
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  origin:
+    build: ./origin_server
+    ports:
+      - 5000:5000
+    networks:
+      - grafana
+    environment:
+      - TOTAL_IMAGES=10
+      - MOUNT_DIR=/data/images/
+      - FLASK_APP=main.py
+    volumes:
+      - ./images/:/data/images/
