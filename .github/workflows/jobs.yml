@@ -111,11 +111,11 @@ jobs:
           port: 22
           script: |
             cd deployment
-            chmod +x scripts/*
             mv scripts/loadbalancer/* scripts/
             rm -r scripts/loadbalancer
             mv loadbalancer/prod-docker-compose.yml ./
             rm -r loadbalancer
+            chmod +x scripts/*
             ./scripts/deploy.sh
 
       - name: Start docker-compose for imagemanager-node-1
@@ -127,11 +127,11 @@ jobs:
           port: 22
           script: |
             cd deployment
-            chmod +x scripts/*
             mv scripts/imagemanager/* scripts/
             rm -r scripts/imagemanager
             mv imagemanager/prod-docker-compose.yml ./
             rm -r imagemanager
+            chmod +x scripts/*
             ./scripts/deploy.sh
 
       - name: Start docker-compose for imagemanager-node-2
@@ -143,9 +143,9 @@ jobs:
           port: 22
           script: |
             cd deployment
-            chmod +x scripts/*
             mv scripts/imagemanager/* scripts/
             rm -r scripts/imagemanager
             mv imagemanager/prod-docker-compose.yml ./
             rm -r imagemanager
+            chmod +x scripts/*
             ./scripts/deploy.sh
