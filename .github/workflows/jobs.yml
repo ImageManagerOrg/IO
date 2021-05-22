@@ -47,7 +47,9 @@ jobs:
         name: Build and push imagemanager
         id: docker_build_imagemanager
         run: |
-          docker build -f imagemanager/Dockerfile -t imagemanager imagemanager
+          pwd
+          ls -la
+          docker build -f ./imagemanager/Dockerfile -t imagemanager ./imagemanager
           docker tag imagemanager orgmanager/imagemanager:latest
           docker push orgmanager/imagemanager:latest
 
