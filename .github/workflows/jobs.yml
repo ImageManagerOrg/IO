@@ -49,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: imagemanager/Dockerfile
-          context: ./imagemanager
+          context: imagemanager
           push: true
           tags: orgmanager/image_manager:latest
       - name: Build and push loadbalancer
@@ -57,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: loadbalancer/Dockerfile
-          context: ./loadbalancer
+          context: loadbalancer
           push: true
           tags: orgmanager/load_balancer:latest
 
