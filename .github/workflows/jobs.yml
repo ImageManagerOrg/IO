@@ -112,10 +112,10 @@ jobs:
           script: |
             cd deployment
             chmod +x scripts/*
-            mv scripts/laodbalancer/* scripts/
-            rm scripts/loadbalancer/
-            mv laodbalancer/prod-docker-compose.yml ./
-            rm laodbalancer/
+            mv scripts/loadbalancer/* scripts/
+            rm -r scripts/loadbalancer
+            mv loadbalancer/prod-docker-compose.yml ./
+            rm -r loadbalancer
             ./scripts/deploy.sh
 
       - name: Start docker-compose for imagemanager-node-1
@@ -129,9 +129,9 @@ jobs:
             cd deployment
             chmod +x scripts/*
             mv scripts/imagemanager/* scripts/
-            rm scripts/imagemanager/
+            rm -r scripts/imagemanager
             mv imagemanager/prod-docker-compose.yml ./
-            rm imagemanager/
+            rm -r imagemanager
             ./scripts/deploy.sh
 
       - name: Start docker-compose for imagemanager-node-2
@@ -145,7 +145,7 @@ jobs:
             cd deployment
             chmod +x scripts/*
             mv scripts/imagemanager/* scripts/
-            rm scripts/imagemanager/
+            rm -r scripts/imagemanager
             mv imagemanager/prod-docker-compose.yml ./
-            rm imagemanager/
+            rm -r imagemanager
             ./scripts/deploy.sh
