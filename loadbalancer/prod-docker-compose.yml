@@ -1,8 +1,5 @@
 version: "3.8"
 
-networks:
-  grafana:
-
 volumes:
   app_data: {}
 
@@ -29,7 +26,6 @@ services:
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
     ports:
       - 8080:8080
-      - 1098:1098
 
   autoheal:
     restart: always

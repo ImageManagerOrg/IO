@@ -4,28 +4,28 @@ on:
   push:
 
 jobs:
-#  test:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#      - name: Set up JDK
-#        uses: actions/setup-java@v1
-#        with:
-#          java-version: 15
-#
-#      - name: Grant execute permission for image manager's gradlew
-#        run: chmod +x gradlew
-#        working-directory: ./imagemanager
-#
-#      - name: Test image manager with Gradle
-#        run: ./gradlew test
-#        working-directory: ./imagemanager
-#
-#      - name: Grant execute permission for load balancer's gradlew
-#        run: chmod +x gradlew
-#        working-directory: ./loadbalancer
-#
-#      - name: Test load balancer with Gradle
-#        run: ./gradlew test
-#        working-directory: ./loadbalancer
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 15
+
+      - name: Grant execute permission for image manager's gradlew
+        run: chmod +x gradlew
+        working-directory: ./imagemanager
+
+      - name: Test image manager with Gradle
+        run: ./gradlew test
+        working-directory: ./imagemanager
+
+      - name: Grant execute permission for load balancer's gradlew
+        run: chmod +x gradlew
+        working-directory: ./loadbalancer
+
+      - name: Test load balancer with Gradle
+        run: ./gradlew test
+        working-directory: ./loadbalancer
