@@ -43,9 +43,7 @@ services:
 
 
   app:
-    build: 
-      context: ./imagemanager
-      dockerfile: Dockerfile
+    build: .
     healthcheck:
       test: curl --fail http://localhost:8080/health || exit 1
       interval: 10s
@@ -83,7 +81,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   origin:
-    build: ./origin_server
+    build: ../origin_server
     ports:
       - 5000:5000
     networks:

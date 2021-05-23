@@ -14,24 +14,12 @@ services:
 
   app:
     image: orgmanager/loadbalancer:latest
-    healthcheck:
-      test: curl --fail http://localhost:8080/health || exit 1
-      interval: 10s
-      timeout: 10s
-      start_period: 60s
-      retries: 3
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
-    ports:
-      - 8080:8080
-
-  autoheal:
-    restart: always
-    image: willfarrell/autoheal
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./log/:/data/log/
+    ports:
+      - 7000:8080
 

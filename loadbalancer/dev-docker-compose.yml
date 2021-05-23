@@ -5,26 +5,12 @@ volumes:
 
 services:
   app:
-    build: 
-      context: ./loadbalancer
-      dockerfile: Dockerfile
-    healthcheck:
-      test: curl --fail http://localhost:8080/health || exit 1
-      interval: 10s
-      timeout: 10s
-      start_period: 10s
-      retries: 3
+    build: .
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
     restart: always
-    ports:
-      - 8080:8080
-
-  autoheal:
-    restart: always
-    image: willfarrell/autoheal
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./log/:/data/log/
+    ports:
+      - 7000:8080
