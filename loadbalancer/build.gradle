@@ -18,6 +18,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'org.mockito:mockito-inline:3.7.7'
+	testImplementation 'org.mockito:mockito-junit-jupiter:3.7.7'
 }
 
 test {
