@@ -52,7 +52,7 @@ services:
     volumes:
       - ./log/:/data/log/
     ports:
-      - 7000:8080
+      - 7000:7000
     networks:
       - grafana
 
