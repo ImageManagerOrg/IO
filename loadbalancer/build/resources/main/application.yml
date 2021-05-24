@@ -1,8 +1,0 @@
-balancer:
-  image-managers:
-    - url: http://localhost:5000
-
-server:
-  port: 7000
-
-

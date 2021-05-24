@@ -31,7 +31,7 @@ public class RouterConfiguration {
                                         Mono.justOrEmpty(serverRequest)
                                 )
                                         .map(params -> balancer.requestImage(params.getT1(), params.getT2()))
-                                        .flatMap(p ->  p)
+                                        .flatMap(p -> p)
 
                 );
     }

@@ -48,6 +48,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+      - IMAGE_MANAGER_URLS=http://172.31.72.84:8080,http://172.31.72.65:8080
     volumes:
       - ./log/:/data/log/
     ports:

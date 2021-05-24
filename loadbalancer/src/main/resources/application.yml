@@ -1,7 +1,59 @@
 balancer:
-  image-managers:
-    - url: http://localhost:8080
-
+  image-manager-urls: http://localhost:8080
 server:
   port: 7000
 
+spring:
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+balancer:
+  image-manager-urls: http://localhost:8080
+server:
+  port: 7000
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+balancer:
+  image-manager-urls: http://localhost:8080
+server:
+  port: 7000
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+balancer:
+  image-manager-urls: ${IMAGE_MANAGER_URLS}
+server:
+  port: 7000
+---
+management:
+  healths:
+    probles:
+      enabled: true
+  metrics:
+    export.prometheus.enabled: true
+    distribution.percentiles.http.server.requests: 0.5, 0.90, 0.99
+    web.server.request.autotime.enabled: false
+    enable:
+      jvm: false
+      tomcat: false
+      system: false
+      logback: false
+  endpoints:
+    web:
+      # by default Spring expose actuator endpoints on /actuator/ path but prometheus needs it be on /
+      base-path: /
+      exposure:
+        include: "*"
+      path-mapping:
+        # prometheus looks at /metrics by default when scraping for metrics
+        metrics: spring-metrics
+        prometheus: metrics
