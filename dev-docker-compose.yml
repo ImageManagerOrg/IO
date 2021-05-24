@@ -2,7 +2,6 @@ version: "3.8"
 
 networks:
   io-net:
-    external: true
 
 volumes:
   app_data: {}
@@ -20,8 +19,8 @@ services:
     networks:
       - io-net
 
-  app:
-    build: .
+  imagemanager:
+    build: ./imagemanager
     networks:
       - io-net
     healthcheck:
@@ -49,17 +48,23 @@ services:
     ports:
       - 8080:8080
       - 1098:1098
-
-  autoheal:
-    restart: always
-    image: willfarrell/autoheal
+        
+  loadbalancer:
+    build: ./loadbalancer
+    networks:
+      - io-net
     environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
+      - SPRING_PROFILES_ACTIVE=prod
+      - IMAGE_MANAGER_URLS=http://imagemanager:8080
+      - JAVA_ARG=-Xlog:gc=debug:file=/data/log/gc.log:time,uptime,level,tags:filecount=5,filesize=100m
+    restart: always
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./log/:/data/log/
+    ports:
+      - 7000:7000
 
   origin:
-    build: ../origin_server
+    build: ./origin_server
     networks:
       - io-net
     ports:

@@ -15,8 +15,14 @@ import java.util.stream.Collectors;
 @Configuration
 public class ImageManagerConfiguration {
 
+    ImageManagerProperties properties;
+
+    public ImageManagerConfiguration(ImageManagerProperties properties) {
+        this.properties = properties;
+    }
+
     @Bean
-    public Balancer balancer(ImageManagerProperties properties) {
+    public Balancer balancer() {
         return new Balancer(
                 properties
                         .getImageManagers()
@@ -42,12 +48,6 @@ public class ImageManagerConfiguration {
                 .build())
                 .clientConnector(connector)
                 .build();
-    }
-
-    @Bean
-    @ConfigurationProperties(prefix = "balancer")
-    public ImageManagerProperties imageManagerProperties() {
-        return new ImageManagerProperties();
     }
 }
 

@@ -40,9 +40,9 @@ services:
       - CACHE_STORAGE_LIMIT_ALERT=90
     extra_hosts:
       # change it so private IPs are not hard coded
-      - "origin:10.0.156.95"
-      - "b.com:10.0.156.95"
-      - "a.com:10.0.156.95"
+      - "origin:172.31.76.94"
+      - "b.com:172.31.76.94"
+      - "a.com:172.31.76.94"
     volumes:
       - /mnt/image-cache-part/cache:/data/cache
       - /mnt/log:/data/log
