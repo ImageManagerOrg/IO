@@ -54,6 +54,7 @@ services:
       - 1098:1098
     networks:
       - grafana
+
   autoheal:
     restart: always
     image: willfarrell/autoheal
