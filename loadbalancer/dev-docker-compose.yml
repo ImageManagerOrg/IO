@@ -1,10 +1,48 @@
 version: "3.8"
 
+networks:
+  io-net:
+    external: true
+
 volumes:
   app_data: {}
 
 services:
-  app:
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    volumes:
+      - ../prometheus/:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/dev-prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - 9090:9090
+    networks:
+      - io-net
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter_balancer
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - io-net
+
+  grafana:
+    image: grafana/grafana:7.3.6
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards/:/etc/dashboards/
+    ports:
+      - 3000:3000
+    networks:
+      - io-net
+
+  balancer_app:
     build: .
     environment:
       - SPRING_PROFILES_ACTIVE=prod
@@ -14,3 +52,5 @@ services:
       - ./log/:/data/log/
     ports:
       - 7000:8080
+    networks:
+      - io-net
