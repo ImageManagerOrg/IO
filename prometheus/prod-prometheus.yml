@@ -25,16 +25,6 @@ scrape_configs:
         action: replace
         replacement: LoadBalancerNodeExporter
 
-#  - job_name: "node_exporter_imagemanager"
-#
-#    static_configs:
-#      - targets: [ "node_exporter_imagemanager:9100" ]
-#
-#    metric_relabel_configs:
-#      - source_labels: [ instance ]
-#        target_label: instance
-#        action: replace
-#        replacement: ImageManagerNodeExporter
 
   - job_name: "loadbalancer_app"
 
@@ -47,16 +37,49 @@ scrape_configs:
         action: replace
         replacement: LoadBalancer
 
-#  - job_name: "imagemanager_app"
-#
-#    static_configs:
-#      - targets: ["app:8080"]
-#
-#    metric_relabel_configs:
-#      - source_labels: [ instance ]
-#        target_label: instance
-#        action: replace
-#        replacement: ImageManager
+  - job_name: "imagemanager_app_1"
+
+    static_configs:
+      - targets: ["172.31.72.84:8080"]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: ImageManager1
+
+  - job_name: "imagemanager_app_2"
+
+    static_configs:
+      - targets: ["172.31.72.65:8080"]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: ImageManager2
+        
+  - job_name: "node_exporter_imagemanager_1"
+
+    static_configs:
+      - targets: [ "172.31.72.84:9100" ]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: ImageManagerNodeExporter1
+          
+  - job_name: "node_exporter_imagemanager_2"
+
+    static_configs:
+      - targets: [ "172.31.72.65:9100" ]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: ImageManagerNodeExporter2
 
 remote_write:
   - url: https://prometheus-blocks-prod-us-central1.grafana.net/api/prom/push
