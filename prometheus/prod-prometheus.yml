@@ -1,0 +1,65 @@
+global:
+  scrape_interval: 10s
+
+
+scrape_configs:
+  - job_name: "prometheus"
+
+    static_configs:
+      - targets: ["localhost:9090"]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: LoadBalancerPrometheus
+
+  - job_name: "node_exporter"
+
+    static_configs:
+      - targets: ["node_exporter:9100"]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: LoadBalancerNodeExporter
+
+#  - job_name: "node_exporter_imagemanager"
+#
+#    static_configs:
+#      - targets: [ "node_exporter_imagemanager:9100" ]
+#
+#    metric_relabel_configs:
+#      - source_labels: [ instance ]
+#        target_label: instance
+#        action: replace
+#        replacement: ImageManagerNodeExporter
+
+  - job_name: "loadbalancer_app"
+
+    static_configs:
+      - targets: ["app:8080"]
+
+    metric_relabel_configs:
+      - source_labels: [ instance ]
+        target_label: instance
+        action: replace
+        replacement: LoadBalancer
+
+#  - job_name: "imagemanager_app"
+#
+#    static_configs:
+#      - targets: ["app:8080"]
+#
+#    metric_relabel_configs:
+#      - source_labels: [ instance ]
+#        target_label: instance
+#        action: replace
+#        replacement: ImageManager
+
+remote_write:
+  - url: https://prometheus-blocks-prod-us-central1.grafana.net/api/prom/push
+    basic_auth:
+      username: GRAFANA_USERNAME
+      password: GRAFANA_PASSWORD
