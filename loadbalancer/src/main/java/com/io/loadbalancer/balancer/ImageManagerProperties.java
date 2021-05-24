@@ -15,10 +15,9 @@ import java.util.stream.Collectors;
 @ConstructorBinding
 @ConfigurationProperties(prefix = "balancer")
 public class ImageManagerProperties {
-    Logger logger = LoggerFactory.getLogger(ImageManagerProperties.class);
-
     @Getter
     private final List<ImageManagerDestination> imageManagers;
+    Logger logger = LoggerFactory.getLogger(ImageManagerProperties.class);
 
     public ImageManagerProperties(String imageManagerUrls) {
         this.imageManagers = Arrays.stream(imageManagerUrls.split(",")).map(ImageManagerDestination::new).collect(Collectors.toList());
