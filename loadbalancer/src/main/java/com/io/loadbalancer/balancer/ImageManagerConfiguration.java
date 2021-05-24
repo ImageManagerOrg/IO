@@ -1,6 +1,5 @@
 package com.io.loadbalancer.balancer;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -15,8 +14,14 @@ import java.util.stream.Collectors;
 @Configuration
 public class ImageManagerConfiguration {
 
+    ImageManagerProperties properties;
+
+    public ImageManagerConfiguration(ImageManagerProperties properties) {
+        this.properties = properties;
+    }
+
     @Bean
-    public Balancer balancer(ImageManagerProperties properties) {
+    public Balancer balancer() {
         return new Balancer(
                 properties
                         .getImageManagers()
@@ -24,7 +29,7 @@ public class ImageManagerConfiguration {
                         .map(manager -> new ImageManager(manager.getUrl()))
                         .collect(Collectors.toList()),
                 initWebClient()
-                );
+        );
     }
 
     public WebClient initWebClient() {
@@ -42,12 +47,6 @@ public class ImageManagerConfiguration {
                 .build())
                 .clientConnector(connector)
                 .build();
-    }
-
-    @Bean
-    @ConfigurationProperties(prefix = "balancer")
-    public ImageManagerProperties imageManagerProperties() {
-        return new ImageManagerProperties();
     }
 }
 

@@ -79,7 +79,7 @@ jobs:
           username: ubuntu
           port: 22
           key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-          source: "loadbalancer/prod-docker-compose.yml,scripts/loadbalancer/*,router/*"
+          source: "prometheus.yml,loadbalancer/prod-docker-compose.yml,scripts/loadbalancer/*,router/*"
           target: "deployment"
 
       - name: Scp to imagemanager-node-1
@@ -89,7 +89,7 @@ jobs:
           username: ubuntu
           port: 22
           key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-          source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
+          source: "imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
           target: "deployment"
 
       - name: Scp to imagemanager-node-2
@@ -99,7 +99,7 @@ jobs:
           username: ubuntu
           port: 22
           key: ${{ secrets.DOCKER_PRIVATE_KEY}}
-          source: "prometheus.yml,imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
+          source: "imagemanager/prod-docker-compose.yml,scripts/imagemanager/*"
           target: "deployment"
 
       - name: Start docker-compose for loadbalancer

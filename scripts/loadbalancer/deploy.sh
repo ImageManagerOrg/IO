@@ -1,5 +1,8 @@
 #!/bin/sh
 
+mkdir -p prometheus
+mv prometheus.yml prometheus/
+
 mv prod-docker-compose.yml docker-compose.yml
 
 /home/ubuntu/deployment/scripts/migrate_all_sll_cert.sh

@@ -1,27 +1,9 @@
 version: "3.8"
 
-networks:
-  grafana:
-
 volumes:
   app_data: {}
 
 services:
-  prometheus:
-    image: prom/prometheus:v2.21.0
-    volumes:
-      - app_data:/prometheus
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=7d"
-      - "--storage.tsdb.retention.size=1GB"
-    ports:
-      - 9090:9090
-    networks:
-      - grafana
-  
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
@@ -31,8 +13,8 @@ services:
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-    networks:
-      - grafana
+    ports:
+      - 9100:9100
 
   app:
     image: orgmanager/imagemanager:latest
@@ -58,17 +40,16 @@ services:
       - CACHE_STORAGE_LIMIT_ALERT=90
     extra_hosts:
       # change it so private IPs are not hard coded
-      - "origin:10.0.156.95"
-      - "b.com:10.0.156.95"
-      - "a.com:10.0.156.95"
+      - "origin:172.31.76.94"
+      - "b.com:172.31.76.94"
+      - "a.com:172.31.76.94"
     volumes:
       - /mnt/image-cache-part/cache:/data/cache
       - /mnt/log:/data/log
     ports:
       - 8080:8080
       - 1098:1098
-    networks:
-      - grafana
+
   autoheal:
     restart: always
     image: willfarrell/autoheal
