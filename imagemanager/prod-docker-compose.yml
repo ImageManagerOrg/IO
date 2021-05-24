@@ -1,8 +1,5 @@
 version: "3.8"
 
-networks:
-  grafana:
-
 volumes:
   app_data: {}
 
@@ -16,8 +13,8 @@ services:
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-    networks:
-      - grafana
+    ports:
+      - 9100:9100
 
   app:
     image: orgmanager/imagemanager:latest
@@ -52,8 +49,6 @@ services:
     ports:
       - 8080:8080
       - 1098:1098
-    networks:
-      - grafana
 
   autoheal:
     restart: always
