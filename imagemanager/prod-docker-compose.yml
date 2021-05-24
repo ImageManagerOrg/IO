@@ -1,27 +1,9 @@
 version: "3.8"
 
-networks:
-  grafana:
-
 volumes:
   app_data: {}
 
 services:
-  prometheus:
-    image: prom/prometheus:v2.21.0
-    volumes:
-      - app_data:/prometheus
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=7d"
-      - "--storage.tsdb.retention.size=1GB"
-    ports:
-      - 9090:9090
-    networks:
-      - grafana
-  
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
@@ -31,8 +13,8 @@ services:
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-    networks:
-      - grafana
+    ports:
+      - 9100:9100
 
   app:
     image: orgmanager/imagemanager:latest
@@ -67,8 +49,7 @@ services:
     ports:
       - 8080:8080
       - 1098:1098
-    networks:
-      - grafana
+
   autoheal:
     restart: always
     image: willfarrell/autoheal

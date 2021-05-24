@@ -1,27 +1,16 @@
 version: "3.8"
 
 networks:
-  grafana:
+  io-net:
+    external: true
 
 volumes:
   app_data: {}
 
 services:
-  prometheus:
-    image: prom/prometheus:v2.21.0
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-    command:
-      - "--config.file=/etc/prometheus/dev-prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    ports:
-      - 9090:9090
-    networks:
-      - grafana
-
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
-    container_name: node_exporter
+    container_name: node_exporter_imagemanager
     command:
       - '--path.rootfs=/host'
     pid: host
@@ -29,21 +18,12 @@ services:
     volumes:
       - '/:/host:ro,rslave'
     networks:
-      - grafana
-
-  grafana:
-    image: grafana/grafana:7.3.6
-    volumes:
-      - ./grafana/provisioning/:/etc/grafana/provisioning/dashboards/
-      - ./grafana/dashboards/:/etc/dashboards/
-    ports:
-      - 3000:3000
-    networks:
-      - grafana
-
+      - io-net
 
   app:
     build: .
+    networks:
+      - io-net
     healthcheck:
       test: curl --fail http://localhost:8080/health || exit 1
       interval: 10s
@@ -69,8 +49,6 @@ services:
     ports:
       - 8080:8080
       - 1098:1098
-    networks:
-      - grafana
 
   autoheal:
     restart: always
@@ -82,10 +60,10 @@ services:
 
   origin:
     build: ../origin_server
+    networks:
+      - io-net
     ports:
       - 5000:5000
-    networks:
-      - grafana
     environment:
       - TOTAL_IMAGES=10
       - MOUNT_DIR=/data/images/
