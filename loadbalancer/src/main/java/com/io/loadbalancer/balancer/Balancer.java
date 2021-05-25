@@ -3,6 +3,7 @@ package com.io.loadbalancer.balancer;
 import com.io.loadbalancer.consistent_hashing.Hashing;
 import com.io.loadbalancer.exceptions.NoIMInstanceAvailableException;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -12,15 +13,12 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 
 public class Balancer {
-    List<ImageManager> imageManagers;
     WebClient client;
     Hashing hashing;
 
-    public Balancer(List<ImageManager> imageManagers, WebClient client, Hashing hashing) {
-        this.imageManagers = imageManagers;
+    public Balancer(WebClient client, Hashing hashing) {
         this.client = client;
         this.hashing = hashing;
     }
@@ -31,11 +29,11 @@ public class Balancer {
         try {
             ImageManager manager = null;
             try {
-                manager = imageManagers.get(hashing.getIMMapping(image));
+                manager = hashing.getIMMapping(image);
             } catch (NoIMInstanceAvailableException e) {
-                e.printStackTrace();
-                // TODO: return 503
+                return ServerResponse.status(HttpStatus.SERVICE_UNAVAILABLE).build();
             }
+
             var managerUri = new URI(manager.getUrl());
 
             uri = UriComponentsBuilder

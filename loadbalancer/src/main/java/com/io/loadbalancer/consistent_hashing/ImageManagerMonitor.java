@@ -10,8 +10,8 @@ public class ImageManagerMonitor {
         this.IMMax = IMMax;
     }
 
-    public int[] getValidInstances(){
-        // This function should return sorted array of indices of the IM instances that are running correctly
+    // This function should return sorted array of indices of the IM instances that are running correctly
+    public int[] getValidInstancesIndexes(){
         return IntStream.range(0, IMMax).toArray();
     }
 }

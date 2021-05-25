@@ -1,7 +1,6 @@
 package com.io.loadbalancer.balancer;
 
 import com.io.loadbalancer.consistent_hashing.Hashing;
-import com.io.loadbalancer.consistent_hashing.HashingConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -11,7 +10,6 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
 import java.time.Duration;
-import java.util.stream.Collectors;
 
 @Configuration
 public class ImageManagerConfiguration {
@@ -27,11 +25,6 @@ public class ImageManagerConfiguration {
     @Bean
     public Balancer balancer() {
         return new Balancer(
-                properties
-                        .getImageManagers()
-                        .stream()
-                        .map(manager -> new ImageManager(manager.getUrl()))
-                        .collect(Collectors.toList()),
                 initWebClient(),
                 hashing
         );
