@@ -1,5 +1,7 @@
 package com.io.loadbalancer.balancer;
 
+import com.io.loadbalancer.consistent_hashing.Hashing;
+import com.io.loadbalancer.consistent_hashing.HashingConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -15,9 +17,11 @@ import java.util.stream.Collectors;
 public class ImageManagerConfiguration {
 
     ImageManagerProperties properties;
+    Hashing hashing;
 
-    public ImageManagerConfiguration(ImageManagerProperties properties) {
+    public ImageManagerConfiguration(ImageManagerProperties properties, Hashing hashing) {
         this.properties = properties;
+        this.hashing = hashing;
     }
 
     @Bean
@@ -28,7 +32,8 @@ public class ImageManagerConfiguration {
                         .stream()
                         .map(manager -> new ImageManager(manager.getUrl()))
                         .collect(Collectors.toList()),
-                initWebClient()
+                initWebClient(),
+                hashing
         );
     }
 
