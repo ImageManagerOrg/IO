@@ -13,6 +13,7 @@ repositories {
 }
 
 dependencies {
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.5.1'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.projectlombok:lombok:1.18.16'
 	annotationProcessor 'org.projectlombok:lombok'
