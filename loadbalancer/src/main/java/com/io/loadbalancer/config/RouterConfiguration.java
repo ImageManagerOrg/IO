@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import io.micrometer.core.annotation.Timed;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 
@@ -26,14 +27,18 @@ public class RouterConfiguration {
         return RouterFunctions
                 .route(GET("/{image}"),
                         serverRequest ->
-                                Mono.zip(
-                                        Mono.justOrEmpty(serverRequest.pathVariable("image")),
-                                        Mono.justOrEmpty(serverRequest)
-                                )
-                                        .map(params -> balancer.requestImage(params.getT1(), params.getT2()))
-                                        .flatMap(p -> p)
-
+                                processRequest(serverRequest)
                 );
+    }
+
+    @Timed
+    private Mono<ServerResponse> processRequest(org.springframework.web.reactive.function.server.ServerRequest serverRequest) {
+        return Mono.zip(
+                Mono.justOrEmpty(serverRequest.pathVariable("image")),
+                Mono.justOrEmpty(serverRequest)
+        )
+                .map(params -> balancer.requestImage(params.getT1(), params.getT2()))
+                .flatMap(p -> p);
     }
 }
 
