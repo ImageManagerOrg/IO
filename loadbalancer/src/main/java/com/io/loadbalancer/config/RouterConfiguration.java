@@ -23,7 +23,6 @@ public class RouterConfiguration {
     Balancer balancer;
     MeterRegistry registry;
     Timer timer;
-    AtomicLong gauge;
 
     public RouterConfiguration(Balancer balancer, MeterRegistry registry) {
         this.balancer = balancer;
@@ -33,8 +32,6 @@ public class RouterConfiguration {
         timer = Timer.builder("http_server_requests")
                 .publishPercentiles(0.5, 0.95, 0.99)
                 .register(registry);
-
-        gauge = registry.gauge("requests_gauge", new AtomicLong(0));
     }
 
     @Bean
@@ -49,7 +46,6 @@ public class RouterConfiguration {
 
     private Mono<ServerResponse> processRequest(org.springframework.web.reactive.function.server.ServerRequest serverRequest) {
         Timer.Sample sample = Timer.start();
-        long start = currentTimeMillis();
 
         return Mono.zip(
                 Mono.justOrEmpty(serverRequest.pathVariable("image")),
@@ -57,8 +53,7 @@ public class RouterConfiguration {
         )
                 .map(params -> balancer.requestImage(params.getT1(), params.getT2()))
                 .flatMap(p -> p)
-                .doFinally(signalType -> {sample.stop(timer);
-                                            gauge.set(currentTimeMillis() - start);});
+                .doFinally(signalType -> sample.stop(timer));
     }
 }
 
