@@ -29,7 +29,7 @@ scrape_configs:
   - job_name: "loadbalancer_app"
 
     static_configs:
-      - targets: ["app:8080"]
+      - targets: ["app:7000"]
 
     metric_relabel_configs:
       - source_labels: [ instance ]
