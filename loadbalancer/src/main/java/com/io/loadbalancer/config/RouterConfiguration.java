@@ -30,7 +30,7 @@ public class RouterConfiguration {
         System.out.println(registry);
 
         timer = Timer.builder("http_server_requests")
-                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentiles(0.5, 0.90, 0.99)
                 .register(registry);
     }
 
