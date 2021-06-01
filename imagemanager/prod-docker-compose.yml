@@ -15,6 +15,11 @@ services:
       - '/:/host:ro,rslave'
     ports:
       - 9100:9100
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m 
+        max-file: 10 
 
   app:
     image: orgmanager/imagemanager:latest
@@ -45,10 +50,15 @@ services:
       - "a.com:172.31.76.94"
     volumes:
       - /mnt/image-cache-part/cache:/data/cache
-      - /mnt/log:/data/log
+      - /mnt/image-cache-part/log:/data/log
     ports:
       - 8080:8080
       - 1098:1098
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m 
+        max-file: 10 
 
   autoheal:
     restart: always
@@ -57,4 +67,9 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m 
+        max-file: 10 
 
