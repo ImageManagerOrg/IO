@@ -29,6 +29,11 @@ services:
       - 9090:9090
     networks:
       - grafana
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m 
+        max-file: 10 
 
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
@@ -55,4 +60,9 @@ services:
       - 7000:7000
     networks:
       - grafana
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m 
+        max-file: 10 
 
