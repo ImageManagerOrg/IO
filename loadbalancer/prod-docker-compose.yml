@@ -32,8 +32,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: 10m 
-        max-file: 10 
+        max-size: "10m" 
+        max-file: "10" 
 
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
@@ -63,6 +63,6 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: 10m 
-        max-file: 10 
+        max-size: "10m"
+        max-file: "10" 
 
