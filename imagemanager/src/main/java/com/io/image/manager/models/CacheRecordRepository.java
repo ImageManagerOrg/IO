@@ -31,4 +31,15 @@ public interface CacheRecordRepository extends CrudRepository<CacheRecord, Long>
     @Transactional
     @Query("select cr.ttl from CacheRecord cr where cr.origin = :origin and cr.nameHash = :nameHash")
     int getTTL(@Param("origin") String origin, @Param("nameHash") String nameHash);
+
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("delete from CacheRecord cr where cr.origin = :origin and cr.imageId = :imageId")
+    void deleteImagesForOriginAndId(@Param("origin") String origin, @Param("imageId") Integer imageId);
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("delete from CacheRecord cr where cr.origin = :origin")
+    void deleteImagesForOrigin(@Param("origin") String origin);
 }
