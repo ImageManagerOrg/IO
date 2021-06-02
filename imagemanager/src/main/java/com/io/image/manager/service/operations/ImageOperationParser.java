@@ -2,7 +2,6 @@ package com.io.image.manager.service.operations;
 
 import com.io.image.manager.data.ConversionInfo;
 import com.io.image.manager.exceptions.ConversionException;
-
 import java.util.*;
 
 public class ImageOperationParser {
@@ -33,13 +32,17 @@ public class ImageOperationParser {
         }
 
         List<String> params = new ArrayList<>(Arrays.asList(query.split("&")));
-
         if (params.size() > 0) {
             String[] args = params.get(0).split("=");
             if ("p".equals(args[0]) || "q".equals(args[0])) {
                 params.remove(0);
             }
-
+            for (int i = 0; i < params.size(); i++) {
+                String[] tmp = params.get(i).split("=");
+                if("c".equals(tmp[0]) || "q".equals(tmp[0])){
+                    params.remove(i);
+                }
+            }
             return parseOperations(params);
         }
         return new ArrayList<>();
