@@ -2,6 +2,7 @@ package com.io.image.manager.controller;
 
 import com.io.image.manager.cache.ImageCache;
 import com.io.image.manager.data.DeleteCacheRequest;
+import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,11 @@ import java.io.IOException;
 @RestController
 public class CacheController {
     ImageCache cache;
+    CacheRecordRepository repository;
 
-    public CacheController(ImageCache cache) {
+    public CacheController(ImageCache cache, CacheRecordRepository repository) {
         this.cache = cache;
+        this.repository = repository;
     }
 
     @DeleteMapping(value = "/api/cache")
@@ -37,6 +40,7 @@ public class CacheController {
 
     @DeleteMapping(value = "/api/cache/all")
     public void purgeCache(@RequestHeader("Host") String host) throws IOException {
+        this.repository.deleteImagesForOrigin(host);
         this.cache.purgeOrigin(originFromHost(host));
     }
 
@@ -46,6 +50,7 @@ public class CacheController {
 
     private void purgeImageByKey(OriginServer origin, int id) {
         try {
+            this.repository.deleteImagesForOriginAndId(origin.getHost(), id);
             this.cache.purgeImage(origin, String.valueOf(id));
         } catch (IOException e) {
             e.printStackTrace();

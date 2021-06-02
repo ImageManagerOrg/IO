@@ -2,6 +2,7 @@ package com.io.image.manager.service;
 
 import com.io.image.manager.config.AppConfigurationProperties;
 import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -28,7 +29,14 @@ public class ConnectionServiceImpl implements ConnectionService {
         }
         poolManager.setMaxPerRoute(new HttpRoute(HttpHost.create(props.getRoutesToLimit())), 6);
         this.connectionManager = poolManager;
-        this.client = HttpClients.custom().setConnectionManager(this.connectionManager).build();
+
+        int timeout = 5;
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(timeout * 1000)
+                .setConnectionRequestTimeout(timeout * 1000)
+                .setSocketTimeout(timeout * 1000).build();
+
+        this.client = HttpClients.custom().setDefaultRequestConfig(config).setConnectionManager(this.connectionManager).build();
 
     }
 

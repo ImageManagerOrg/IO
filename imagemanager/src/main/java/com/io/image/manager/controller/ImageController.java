@@ -95,8 +95,14 @@ public class ImageController {
             logger.info(url);
         }
 
+
         OriginServer origin;
+        // this is a pure hack to match project specification for origin servers
         if (host.contains("com")) {
+            // get rid of any port as origin servers have port 80
+            if (host.contains(":")) {
+                host = host.substring(0, host.indexOf(":"));
+            }
             origin = originFromHost(host);
         }
         else {
