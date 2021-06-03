@@ -4,9 +4,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name="cache_record",
+        uniqueConstraints=
+        @UniqueConstraint(columnNames={"origin", "nameHash"})
+)
 public class CacheRecord {
     protected CacheRecord() {
     }
@@ -34,6 +40,10 @@ public class CacheRecord {
         newRecord.hits = 1;
         newRecord.remoteFetch = this.remoteFetch;
         return newRecord;
+    }
+
+    public boolean isTTLValid() {
+        return (Duration.between(remoteFetch, LocalDateTime.now()).getSeconds() < ttl);
     }
 
     @Id

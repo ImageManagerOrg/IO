@@ -25,7 +25,7 @@ public interface CacheRecordRepository extends CrudRepository<CacheRecord, Long>
 
     @Transactional
     @Modifying(clearAutomatically = true)
-    @Query("update CacheRecord cr set cr.ttl = :ttl, cr.remoteFetch = current_timestamp where cr.origin = :origin and cr.nameHash = :nameHash")
+    @Query("update CacheRecord cr set cr.ttl = :ttl, cr.remoteFetch = (strftime('%s', current_timestamp) || substr(strftime('%f', current_timestamp), 4)) where cr.origin = :origin and cr.nameHash = :nameHash")
     void updateTTL(@Param("origin") String origin, @Param("nameHash") String nameHash, @Param("ttl") Long ttl);
 
     @Transactional
@@ -37,6 +37,11 @@ public interface CacheRecordRepository extends CrudRepository<CacheRecord, Long>
     @Modifying(clearAutomatically = true)
     @Query("delete from CacheRecord cr where cr.origin = :origin and cr.imageId = :imageId")
     void deleteImagesForOriginAndId(@Param("origin") String origin, @Param("imageId") Integer imageId);
+
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("update CacheRecord cr set cr.ttl = :ttl, cr.remoteFetch = strftime('%s', current_timestamp) || substr(strftime('%f', current_timestamp),4) where cr.origin = :origin and cr.imageId = :imageId")
+    void updateTTLForAllImages(@Param("origin") String origin, @Param("imageId") Integer imageId, @Param("ttl") Long ttl);
 
     @Transactional
     @Modifying(clearAutomatically = true)
