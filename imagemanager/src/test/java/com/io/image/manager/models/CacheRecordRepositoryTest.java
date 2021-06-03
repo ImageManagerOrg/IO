@@ -39,19 +39,4 @@ class CacheRecordRepositoryTest {
         //then
         assertEquals(2, result.getHits());
     }
-
-    @Test
-    public void updatedTTL() {
-        // given
-        var result = repository.save(defaultCacheRecord());
-
-        // when
-        repository.updateTTL(result.getOrigin(), result.getNameHash(), 999L);
-        var newResult = repository.findById(result.getId()).get();
-
-        // then
-        assertEquals(newResult.getTtl(), 999L);
-        assert (newResult.getRemoteFetch().isAfter(result.getRemoteFetch()));
-    }
-
 }

@@ -16,10 +16,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.Data;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.IIOImage;
@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-    private final AppConfigurationProperties props;
     private final CacheRecordRepository repository;
     private final ImageCache cache;
     private final Counter missCounter;
@@ -48,8 +47,7 @@ public class ImageServiceImpl implements ImageService {
     private final ConnectionService connectionService;
     private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
 
-    public ImageServiceImpl(AppConfigurationProperties props, CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
-        this.props = props;
+    public ImageServiceImpl(CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
         this.repository = repository;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
@@ -67,13 +65,17 @@ public class ImageServiceImpl implements ImageService {
             List<ImageOperation> operations,
             ConversionInfo info
     ) throws IOException, ImageOperationException, ImageNotFoundException, ConversionException {
-        // check if image from given origin and with particular operations is already in cache
+        var imageHash = cache.cacheHash(origin, filename, operations, info);
+
+        var cacheEntry = repository.findByOriginAndNameHash(origin.getHost(), imageHash);
+        if (cacheEntry.isPresent() && !cacheEntry.get().isTTLValid()) {
+            revalidateImage(origin, filename, info);
+        }
+
         var cacheResult = cache.checkInCache(origin, filename, operations, info);
         if (cacheResult.isPresent()) {
             try {
                 repository.incrementImageHit(origin.getHost(), cacheResult.get().resultHash());
-                int ttl = repository.getTTL(origin.getHost(), cacheResult.get().resultHash());
-                cacheResult.get().setTTL(ttl);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -98,9 +100,10 @@ public class ImageServiceImpl implements ImageService {
     @Data
     private static class RemoteFetchResult {
         private final Optional<BufferedImage> image;
+        private final int bytes;
         private final Optional<String> cacheControl;
         private final Optional<String> etag;
-        public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), Optional.empty(), Optional.empty());
+        public final static RemoteFetchResult EMPTY_FETCH_RESULT = new RemoteFetchResult(Optional.empty(), 0, Optional.empty(), Optional.empty());
     }
 
     private RemoteFetchResult fetchRemoteImage(OriginServer origin, String filename) {
@@ -108,31 +111,39 @@ public class ImageServiceImpl implements ImageService {
             CloseableHttpClient client = connectionService.getHttpClient();
             HttpGet get = new HttpGet(origin.getUrl() + filename);
             CloseableHttpResponse response = client.execute(get);
-            try {
-                HttpEntity entity = response.getEntity();
-                InputStream is = entity.getContent();
-                Optional<String> cacheControl = Optional.empty();
-                if (response.getHeaders("Cache-Control") != null) {
-                    cacheControl = Optional.of(response.getHeaders("Cache-Control").toString());
-                }
-                Optional<String> etag = Optional.empty();
-                if (response.getHeaders("ETag") != null) {
-                    etag = Optional.of(response.getHeaders("ETag").toString());
-                }
-                byte[] imgBytes = is.readAllBytes();
-                is.close();
-                BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
-                if (image == null) {
-                    return RemoteFetchResult.EMPTY_FETCH_RESULT;
-                }
-                originTrafficSummary.record(imgBytes.length);
-                return new RemoteFetchResult(Optional.of(image), cacheControl, etag);
-            } catch (Exception e) {
-                return RemoteFetchResult.EMPTY_FETCH_RESULT;
-            } finally {
-                response.close();
-            }
+
+            var result = fetchImageFromHttpResponse(response);
+            response.close();
+
+            originTrafficSummary.record(result.getBytes());
+
+            return result;
         } catch (Exception e) {
+            return RemoteFetchResult.EMPTY_FETCH_RESULT;
+        }
+    }
+
+    private RemoteFetchResult fetchImageFromHttpResponse(CloseableHttpResponse response) {
+        try {
+            var entity = response.getEntity();
+            InputStream is = entity.getContent();
+            Optional<String> cacheControl = Optional.empty();
+            if (response.getHeaders("Cache-Control") != null) {
+                cacheControl = Optional.of(response.getHeaders("Cache-Control").toString());
+            }
+            Optional<String> etag = Optional.empty();
+            if (response.getHeaders("ETag") != null) {
+                etag = Optional.of(response.getFirstHeader("ETag").getValue());
+            }
+            byte[] imgBytes = is.readAllBytes();
+            is.close();
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imgBytes));
+            if (image == null) {
+                return RemoteFetchResult.EMPTY_FETCH_RESULT;
+            }
+            return new RemoteFetchResult(Optional.of(image), imgBytes.length, cacheControl, etag);
+        } catch (Exception e) {
+            e.printStackTrace();
             return RemoteFetchResult.EMPTY_FETCH_RESULT;
         }
     }
@@ -167,11 +178,7 @@ public class ImageServiceImpl implements ImageService {
         if (remoteFetchResult.image.isPresent()) {
             missCounter.increment();
 
-            var maxAge = maxAgePattern.matcher(remoteFetchResult.cacheControl.orElse("max-age=0"));
-            long ttl = 0L;
-            if (maxAge.find()) {
-                ttl = Long.parseLong(maxAge.group(1));
-            }
+            long ttl = parseTtl(remoteFetchResult.cacheControl.orElse("max-age=0"));
 
             // cache image without operations and conversion for an optimization
             var originalCacheResult = cache.storeImage(origin, remoteFetchResult.image.get(), filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
@@ -194,6 +201,15 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private Optional<CacheResult> fetchLocalProcessAndCache(OriginServer origin, String filename, List<ImageOperation> operations, ConversionInfo info) throws ConversionException, IOException, ImageOperationException {
+        var record = repository.findByOriginAndNameHash(origin.getHost(), cache.cacheHash(origin, filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat())));
+
+        // I'm lazy and don't check for ttl in the origin, whatever, fetch it one more time
+        if (record.isPresent() && !record.get().isTTLValid()) {
+            if (!revalidateImage(origin, filename, info)) {
+                return Optional.empty();
+            }
+        }
+
         var foundImage = cache.loadImage(origin, filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
 
         if (foundImage.isEmpty()) {
@@ -229,5 +245,66 @@ public class ImageServiceImpl implements ImageService {
             image = op.run(image);
         }
         return compressImage(image, info);
+    }
+
+    private Long parseTtl(String maxAgeString) {
+        var maxAge = maxAgePattern.matcher(maxAgeString);
+        long ttl = 0L;
+        if (maxAge.find()) {
+            ttl = Long.parseLong(maxAge.group(1));
+        }
+        return ttl;
+    }
+
+    // returns if image is still valid
+    boolean revalidateImage(OriginServer origin, String filename, ConversionInfo info) {
+        try {
+            // check for unprocessed image hash
+            var hash = cache.cacheHash(origin, filename, Collections.emptyList(), ImageOperationParser.getDefaultConversionInfo(info.getFormat()));
+            var record = repository.findByOriginAndNameHash(origin.getHost(), hash);
+
+            // we don't have an original image, delete every instance of the image and go on
+            if (record.isEmpty()) {
+                cache.purgeImage(origin, filename);
+                // and this annoying parsing...
+
+                if (filename.contains(".")) {
+                    filename = filename.substring(0, filename.indexOf("."));
+                }
+
+                var imageId = Integer.parseInt(filename);
+                repository.deleteImagesForOriginAndId(origin.getHost(), imageId);
+                return false;
+            }
+
+
+            // original image has been found, continue to checking its etag validity
+            CloseableHttpClient client = connectionService.getHttpClient();
+            HttpGet request = new HttpGet(origin.getUrl() + filename);
+            request.setHeader("If-None-Match", record.get().getEtag());
+            CloseableHttpResponse response = client.execute(request);
+            try {
+                var statusCode = response.getStatusLine().getStatusCode();
+                var maxAge = response.getFirstHeader("Cache-Control").getValue();
+
+                if (statusCode == HttpStatus.NOT_MODIFIED.value()) {
+                    // image has not been modified, update the ttl for all instances
+                    var ttl = parseTtl(maxAge);
+                    repository.updateTTLForAllImages(origin.getHost(), record.get().getImageId(), ttl);
+                    return true;
+                } else {
+                    // delete all image instances from cache and continue on fetching it
+                    cache.purgeImage(origin, filename);
+                    repository.deleteImagesForOriginAndId(record.get().getOrigin(), record.get().getImageId());
+
+                    // forget about the response having the image, too much hustle for this project, just call the http request again when needed...
+                }
+            } finally {
+                response.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

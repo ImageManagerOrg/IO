@@ -21,7 +21,12 @@ for i in range(0, TOTAL_IMAGES):
         with open(f"{MOUNT_DIR}{i + 1}.jpg", 'wb') as f:
             f.write(response.content)
             
-app = Flask(__name__, static_url_path="/", static_folder=MOUNT_DIR)
+class FlaskApp(Flask):
+    def get_send_file_max_age(self, name):
+        return 30
+
+            
+app = FlaskApp(__name__, static_url_path="/", static_folder=MOUNT_DIR)
 
 app.run()
 

@@ -16,12 +16,14 @@ spring:
     activate:
       on-profile: dev
 image-manager:
+#  origin-server: http://localhost:5000/
   origin-server: http://localhost:5000/
   disk-cache-mount-point: ../cache
   disk-log-mount-point: ../log
   log-requests: false
   url-show-mode: true
   routes-to-limit: http://localhost:5000
+#  routes-to-limit: http://3.238.135.129:80/
   connection-limits: 5
   cache-storage-limit: 100000000
   cache-storage-limit-alert: 90

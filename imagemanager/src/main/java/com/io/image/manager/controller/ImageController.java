@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @RestController
 public class ImageController {
     private final ImageService imageService;
-    private final CacheRecordRepository cacheRepository;
     private final DistributionSummary outboundTrafficSummary;
     private final AppConfigurationProperties props;
     private final boolean logRequests;
@@ -44,9 +43,8 @@ public class ImageController {
 
     private final Logger logger = LoggerFactory.getLogger(ImageController.class);
 
-    public ImageController(ImageService imageService, CacheRecordRepository cacheRepository, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
+    public ImageController(ImageService imageService, PrometheusMeterRegistry mr, AppConfigurationProperties props) throws IOException {
         this.imageService = imageService;
-        this.cacheRepository = cacheRepository;
         outboundTrafficSummary = DistributionSummary
                 .builder("outbound.traffic.size")
                 .baseUnit("bytes") // optional
