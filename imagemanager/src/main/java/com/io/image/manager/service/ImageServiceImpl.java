@@ -76,6 +76,8 @@ public class ImageServiceImpl implements ImageService {
         if (cacheResult.isPresent()) {
             try {
                 repository.incrementImageHit(origin.getHost(), cacheResult.get().resultHash());
+                int ttl = repository.getTTL(origin.getHost(), cacheResult.get().resultHash());
+                cacheResult.get().setTTL(ttl);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -266,8 +268,8 @@ public class ImageServiceImpl implements ImageService {
             // we don't have an original image, delete every instance of the image and go on
             if (record.isEmpty()) {
                 cache.purgeImage(origin, filename);
-                // and this annoying parsing...
 
+                // and this annoying parsing...
                 if (filename.contains(".")) {
                     filename = filename.substring(0, filename.indexOf("."));
                 }

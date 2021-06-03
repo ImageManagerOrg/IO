@@ -53,8 +53,8 @@ public class PeriodicDiskCacheCleanup {
         }
     }
 
-    // garbage collect files every 6 hours
-    @Scheduled(fixedDelay = 1000 * 60 * 60 * 6)
+    // garbage collect files every hour
+    @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void garbageCollection() throws IOException {
         log.info("Starting garbage collection of untracked images...");
 
@@ -84,7 +84,13 @@ public class PeriodicDiskCacheCleanup {
     }
 
     boolean isImageDirectory(Path dir) {
-        // mount point + origin folder
-        return dir.getNameCount() > 2;
+        var name = dir.getName(dir.getNameCount() - 1).toString();
+        try {
+            // check if directory name is a number, if so then we are dealing with an image directory
+            Integer.parseInt(name);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
