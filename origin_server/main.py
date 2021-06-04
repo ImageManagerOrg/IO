@@ -20,13 +20,15 @@ for i in range(0, TOTAL_IMAGES):
     if response.status_code == 200:
         with open(f"{MOUNT_DIR}{i + 1}.jpg", 'wb') as f:
             f.write(response.content)
-            
-class FlaskApp(Flask):
-    def get_send_file_max_age(self, name):
-        return 30
 
-            
-app = FlaskApp(__name__, static_url_path="/", static_folder=MOUNT_DIR)
+app = Flask(__name__, static_url_path="/", static_folder=MOUNT_DIR)
+
+@app.after_request
+def after_request(response):
+    response.direct_passthrough = False
+    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["Expires"] =300
+    response.add_etag()
+    return response
 
 app.run()
-
