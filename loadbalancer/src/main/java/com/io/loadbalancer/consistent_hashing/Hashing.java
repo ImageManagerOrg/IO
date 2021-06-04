@@ -14,6 +14,7 @@ public class Hashing {
     PopularityMonitor popularityMonitor;
     ImageManagerMonitor imageManagerMonitor;
     Random random = new Random();
+    double epsilon = 0.000001;
 
     public Hashing(List<ImageManager> imageManagers,
                    PopularityMonitor popularityMonitor,
@@ -34,7 +35,7 @@ public class Hashing {
         int fileNameHashMod = getCongruence(fileName.hashCode(), IMMax);
 
         double popularity = popularityMonitor.getContentPopularity(fileName);
-        int rangeIMInstances = (int) Math.ceil(popularity * IMMax);
+        int rangeIMInstances = (int) Math.ceil((popularity + epsilon) * IMMax);
         int hashGivenPopularity = (fileNameHashMod + random.nextInt(rangeIMInstances)) % IMMax;
 
         int validIMInstances [] = imageManagerMonitor.getValidInstancesIndexes();
