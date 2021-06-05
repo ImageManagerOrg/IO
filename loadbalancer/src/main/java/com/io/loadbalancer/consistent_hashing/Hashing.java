@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.Math.min;
+
 public class Hashing {
 
     List<ImageManager> imageManagers;
@@ -35,7 +37,7 @@ public class Hashing {
         int fileNameHashMod = getCongruence(fileName.hashCode(), IMMax);
 
         double popularity = popularityMonitor.getContentPopularity(fileName);
-        int rangeIMInstances = (int) Math.ceil((popularity + epsilon) * IMMax);
+        int rangeIMInstances = min((int) Math.ceil((popularity + epsilon) * IMMax), IMMax);
         int hashGivenPopularity = (fileNameHashMod + random.nextInt(rangeIMInstances)) % IMMax;
 
         int validIMInstances [] = imageManagerMonitor.getValidInstancesIndexes();

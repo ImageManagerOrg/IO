@@ -57,7 +57,7 @@ public class PopularityMonitor {
         double requestTypeMean = (double) requestTypesSum / (double) windowSize;
         // Estimate standard traffic per content type
         double maxRequestsPerType;
-        if(requestTypeMean < 0){
+        if(requestTypeMean < 1){
             maxRequestsPerType = requestsPerWindowTimeRangePerIMInstance;
         } else {
             maxRequestsPerType =requestsPerWindowTimeRangePerIMInstance / requestTypeMean;
