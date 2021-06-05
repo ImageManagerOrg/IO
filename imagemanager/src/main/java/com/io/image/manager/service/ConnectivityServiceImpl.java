@@ -39,15 +39,12 @@ public class ConnectivityServiceImpl implements ConnectivityService {
         allRequests.put(host, allRequests.get(host) + 1);
     }
 
-    ;
 
     public synchronized void registerFail(OriginServer host) {
         if (!failRequests.containsKey(host))
             failRequests.put(host, 0);
         failRequests.put(host, failRequests.get(host) + 1);
     }
-
-    ;
 
     public boolean isConnectivityEstablished() {
         if (!connectivityEstablished) {
@@ -87,8 +84,5 @@ public class ConnectivityServiceImpl implements ConnectivityService {
 
         return connectivity;
     }
-
-    ;
-
 
 }
