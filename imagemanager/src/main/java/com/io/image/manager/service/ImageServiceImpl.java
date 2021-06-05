@@ -12,6 +12,7 @@ import com.io.image.manager.models.CacheRecordRepository;
 import com.io.image.manager.origin.OriginServer;
 import com.io.image.manager.service.operations.ImageOperation;
 import com.io.image.manager.service.operations.ImageOperationParser;
+import com.io.image.manager.service.ConnectivityService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -46,8 +47,9 @@ public class ImageServiceImpl implements ImageService {
     private final DistributionSummary originTrafficSummary;
     private final ConnectionService connectionService;
     private final Pattern maxAgePattern = Pattern.compile("max-age=([0-9]+)");
+    private final ConnectivityService connectivityService;
 
-    public ImageServiceImpl(CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService) {
+    public ImageServiceImpl(CacheRecordRepository repository, ImageCache cache, PrometheusMeterRegistry mr, ConnectionService connectionService, ConnectivityService connectivityServic) {
         this.repository = repository;
         this.cache = cache;
         missCounter = Counter.builder("cache.miss.count").register(mr);
@@ -56,6 +58,7 @@ public class ImageServiceImpl implements ImageService {
                 .baseUnit("bytes") // optional
                 .register(mr);
         this.connectionService = connectionService;
+        this.connectivityService = connectivityServic;
     }
 
     @Override
@@ -90,11 +93,12 @@ public class ImageServiceImpl implements ImageService {
             return cacheResult.get();
         }
 
+        connectivityService.registerRequest(origin);
         cacheResult = fetchRemoteProcessAndCache(origin, filename, operations, info);
         if (cacheResult.isPresent()) {
             return cacheResult.get();
         }
-
+        connectivityService.registerFail(origin);
         throw new ImageNotFoundException("Image not found at origin: " + origin.getUrl());
     }
 
