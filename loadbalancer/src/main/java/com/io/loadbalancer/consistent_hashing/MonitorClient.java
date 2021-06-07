@@ -9,13 +9,13 @@ import java.util.Objects;
 @Component
 public class MonitorClient {
 
-    public boolean getStatus(String host) {
+    public boolean hasActiveOrigins(String host) {
         try {
             RestTemplate restTemplate = getTemplate();
             String url = host + "/connectivityCheck";
             ConnectivityCheckResponse response =
                     restTemplate.getForEntity(url, ConnectivityCheckResponse.class).getBody();
-            return Objects.requireNonNull(response).status;
+            return Objects.requireNonNull(response).hasActiveOrigins;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -28,6 +28,6 @@ public class MonitorClient {
 
     @NoArgsConstructor
     private static class ConnectivityCheckResponse {
-        public boolean status;
+        public boolean hasActiveOrigins;
     }
 }

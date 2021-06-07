@@ -23,10 +23,10 @@ public class ConnectivityController {
     }
 
     public static class ConnectivityCheckResponse {
-        public boolean status;
+        public boolean hasActiveOrigins;
 
-        public ConnectivityCheckResponse(boolean status) {
-            this.status = status;
+        public ConnectivityCheckResponse(boolean hasActiveOrigins) {
+            this.hasActiveOrigins = hasActiveOrigins;
         }
     }
 }
