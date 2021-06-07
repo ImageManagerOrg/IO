@@ -26,8 +26,8 @@ app = Flask(__name__, static_url_path="/", static_folder=MOUNT_DIR)
 @app.after_request
 def after_request(response):
     response.direct_passthrough = False
-    response.headers["Cache-Control"] = "public, max-age=300"
-    response.headers["Expires"] =300
+    response.headers["Cache-Control"] = "max-age=30"
+    response.headers["Expires"] = 30
     response.add_etag()
     return response
 
