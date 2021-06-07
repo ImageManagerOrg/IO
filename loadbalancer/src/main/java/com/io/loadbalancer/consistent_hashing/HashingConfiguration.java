@@ -5,16 +5,29 @@ import com.io.loadbalancer.balancer.ImageManagerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
+@EnableScheduling
 public class HashingConfiguration {
 
     ImageManagerProperties properties;
+    MonitorClient monitorClient;
 
-    public HashingConfiguration(ImageManagerProperties properties) {
+    public HashingConfiguration(ImageManagerProperties properties, MonitorClient monitorClient) {
         this.properties = properties;
+        this.monitorClient = monitorClient;
+    }
+
+    public List<ImageManager> getImageManagerList() {
+        return properties
+                .getImageManagers()
+                .stream()
+                .map(manager -> new ImageManager(manager.getUrl()))
+                .collect(Collectors.toList());
     }
 
     @Bean
@@ -29,15 +42,15 @@ public class HashingConfiguration {
     }
 
     @Bean
+    public ImageManagerMonitor imageManagerMonitor() {
+        return new ImageManagerMonitor(getImageManagerList(), monitorClient);
+    }
+
+    @Bean
     public Hashing hashing(){
-        int IMMax = properties.getImageManagers().size();
         return new Hashing(
-                properties
-                        .getImageManagers()
-                        .stream()
-                        .map(manager -> new ImageManager(manager.getUrl()))
-                        .collect(Collectors.toList()),
+                getImageManagerList(),
                 popularityMonitor(),
-                new ImageManagerMonitor(IMMax)); // Not sure if it should be initialized here
+                imageManagerMonitor());
     }
 }
