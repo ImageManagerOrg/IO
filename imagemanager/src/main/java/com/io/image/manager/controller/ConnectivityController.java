@@ -18,7 +18,15 @@ public class ConnectivityController {
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public String connectivityCheck(){
-        return String.valueOf(connectivityService.isConnectivityEstablished());
+    public ConnectivityCheckResponse connectivityCheck(){
+        return new ConnectivityCheckResponse(connectivityService.isConnectivityEstablished());
+    }
+
+    public static class ConnectivityCheckResponse {
+        public boolean hasActiveOrigins;
+
+        public ConnectivityCheckResponse(boolean hasActiveOrigins) {
+            this.hasActiveOrigins = hasActiveOrigins;
+        }
     }
 }
