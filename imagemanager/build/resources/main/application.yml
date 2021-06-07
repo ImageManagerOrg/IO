@@ -4,12 +4,12 @@ spring:
 ---
 spring:
   datasource:
-    url: jdbc:sqlite:../cache/sqlitesample.db
-    driver-class-name: org.sqlite.JDBC
+    url: jdbc:h2:file:../cache/h2.db
+    driver-class-name: org.h2.Driver
     username: sa
     password: password
   jpa:
-    database-platform: com.io.image.manager.hibernate.SQLDialect
+#    database-platform: com.io.image.manager.hibernate.SQLDialect
     hibernate:
       ddl-auto: update
   config:
@@ -32,12 +32,12 @@ logging:
 ---
 spring:
   datasource:
-    url: jdbc:sqlite:../cache/test.db
-    driver-class-name: org.sqlite.JDBC
+    url: jdbc:h2:file:../cache/h2.db
+    driver-class-name: org.h2.Driver
     username: sa
     password: password
   jpa:
-    database-platform: com.io.image.manager.hibernate.SQLDialect
+#    database-platform: com.io.image.manager.hibernate.SQLDialect
   config:
     activate:
       on-profile: test
@@ -57,12 +57,14 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:sqlite:${CACHE_DIR}/prodsqlite.db
-    driver-class-name: org.sqlite.JDBC
+#    url: jdbc:sqlite:${CACHE_DIR}/prodsqlite.db
+#    driver-class-name: org.sqlite.JDBC
+    url: jdbc:h2:file:${CACHE_DIR}/h2_prod.db
+    driver-class-name: org.h2.Driver
     username: sa
     password: password
   jpa:
-    database-platform: com.io.image.manager.hibernate.SQLDialect
+#    database-platform: com.io.image.manager.hibernate.SQLDialect
     hibernate:
       ddl-auto: update
 image-manager:

@@ -135,7 +135,7 @@ public class ImageServiceImpl implements ImageService {
             InputStream is = entity.getContent();
             Optional<String> cacheControl = Optional.empty();
             if (response.getHeaders("Cache-Control") != null) {
-                cacheControl = Optional.of(response.getHeaders("Cache-Control").toString());
+                cacheControl = Optional.of(response.getFirstHeader("Cache-Control").getValue());
             }
             Optional<String> etag = Optional.empty();
             if (response.getHeaders("ETag") != null) {
